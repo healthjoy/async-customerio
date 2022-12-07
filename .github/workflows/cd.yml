@@ -1,0 +1,67 @@
+name: CD
+
+on:
+  push:
+    branches:
+      - "master"
+    paths:
+      - "**.py"
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  create-virtualenv:
+    runs-on: ubuntu-latest
+    steps:
+      - name: source code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+
+      - name: virtualenv cache
+        uses: syphar/restore-virtualenv@v1.2
+        id: cache-virtualenv
+        with:
+          custom_cache_key_element: v1.2
+
+      - name: pip cache
+        uses: syphar/restore-pip-download-cache@v1
+        if: steps.cache-virtualenv.outputs.cache-hit != 'true'
+
+      - name: Install Python dependencies
+        if: steps.cache-virtualenv.outputs.cache-hit != 'true'
+        env:
+          POETRY_VERSION: 1.2.2
+        run: |
+          pip install pip==22.3 setuptools==65.5.0
+          curl -sSL https://install.python-poetry.org | python3 -
+          export VENV="$(poetry env info -p)"
+          source ${VENV}/bin/activate
+          poetry install --no-interaction
+
+      - name: Log currently installed packages and versions
+        run: pip list
+
+  release:
+    needs: create-virtualenv
+    runs-on: ubuntu-latest
+    steps:
+      - name: source code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+
+      - name: Release to PyPI
+        env:
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+          POETRY_VERSION: 1.2.2
+        run: |
+          pip install pip==22.3 setuptools==65.5.0
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          poetry build
+          poetry config pypi-token.pypi $PYPI_TOKEN
+          poetry publish

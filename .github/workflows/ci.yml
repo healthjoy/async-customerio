@@ -1,0 +1,130 @@
+name: CI
+
+# Controls when the action will run.
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches:
+      - "master"
+      - "ci"
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.x"
+    paths:
+      - "**.py"
+  pull_request:
+    branches:
+      - "master"
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  create-virtualenv:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ '3.7', '3.8', '3.9', '3.10', '3.11' ]
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: virtualenv cache
+        uses: syphar/restore-virtualenv@v1.2
+        id: cache-virtualenv
+        with:
+          custom_cache_key_element: v1.2
+
+      - name: pip cache
+        uses: syphar/restore-pip-download-cache@v1
+        if: steps.cache-virtualenv.outputs.cache-hit != 'true'
+
+      - name: Install Python dependencies
+        if: steps.cache-virtualenv.outputs.cache-hit != 'true'
+        env:
+          POETRY_VERSION: 1.2.2
+        run: |
+          pip install pip==22.3 setuptools==65.5.0
+          curl -sSL https://install.python-poetry.org | python3 -
+          export VENV="$(poetry env info -p)"
+          source ${VENV}/bin/activate
+          poetry install --no-interaction -vv
+
+      - name: Log currently installed packages and versions
+        run: pip list
+
+  linters-black:
+    needs: create-virtualenv
+    runs-on: ubuntu-latest
+    steps:
+      - name: source code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+
+      - name: virtualenv cache
+        uses: syphar/restore-virtualenv@v1.2
+        id: cache-virtualenv
+        with:
+          custom_cache_key_element: v1.2
+
+      - name: Check code style
+        run: black --check --line-length=120 --diff async_customerio
+
+  linters-mypy:
+    needs: create-virtualenv
+    runs-on: ubuntu-latest
+    steps:
+      - name: source code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+
+      - name: virtualenv cache
+        uses: syphar/restore-virtualenv@v1.2
+        id: cache-virtualenv
+        with:
+          custom_cache_key_element: v1.2
+
+      - name: Static type checker
+        run: mypy --no-error-summary --hide-error-codes --follow-imports=skip async_customerio
+
+  test:
+    needs: [ linters-black, linters-mypy ]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ '3.7', '3.8', '3.9', '3.10', '3.11' ]
+    steps:
+      - name: source code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: virtualenv cache
+        uses: syphar/restore-virtualenv@v1.2
+        id: cache-virtualenv
+        with:
+          custom_cache_key_element: v1.2
+
+      - name: Run pytest
+        run: pytest tests/
+
+      - name: Submit coverage report
+        if: github.ref == 'refs/heads/master'
+        env:
+          CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_TOKEN }}
+        run: |
+          pip install codacy-coverage
+          python-codacy-coverage -r coverage.xml
