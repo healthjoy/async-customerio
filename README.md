@@ -14,7 +14,7 @@
 
 ## Features
 
-  * 
+  *
 
 ## Installation
 ```shell script

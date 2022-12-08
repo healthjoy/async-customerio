@@ -1,9 +1,9 @@
 import logging
 
-from async_customerio.errors import AsyncCustomerIOError
-from async_customerio.track import AsyncCustomerIO
-from async_customerio.api import AsyncAPIClient, SendEmailRequest
-from async_customerio.regions import Regions
+from async_customerio.api import AsyncAPIClient, SendEmailRequest  # noqa
+from async_customerio.errors import AsyncCustomerIOError  # noqa
+from async_customerio.regions import Regions  # noqa
+from async_customerio.track import AsyncCustomerIO  # noqa
 
 
 root_logger = logging.getLogger("async_customerio")

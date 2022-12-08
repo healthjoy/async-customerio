@@ -35,3 +35,4 @@ repos:
       - id: mypy
         args: [--no-error-summary, --hide-error-codes, --follow-imports=skip]
         files: ^async_customerio/
+        additional_dependencies: [types-setuptools]

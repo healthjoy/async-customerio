@@ -1,7 +1,7 @@
 import math
 import typing as t
 from datetime import datetime, timezone
-from urllib.parse import urljoin, urlencode, quote
+from urllib.parse import quote, urlencode, urljoin
 
 from .errors import AsyncCustomerIOError
 

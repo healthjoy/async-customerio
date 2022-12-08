@@ -6,15 +6,16 @@ import typing as t
 
 from async_customerio.client_base import AsyncClientBase
 from async_customerio.errors import AsyncCustomerIOError
-from async_customerio.regions import Regions, Region
+from async_customerio.regions import Region, Regions
 from async_customerio.utils import join_url
 
 
 class SendEmailRequest:
     """An object with all the options available for triggering a transactional message"""
+
     def __init__(
         self,
-        transactional_message_id: t.Union [str, int] = None,
+        transactional_message_id: t.Union[str, int] = None,
         to: str = None,
         identifiers=None,
         _from: str = None,
@@ -55,7 +56,7 @@ class SendEmailRequest:
         self.message_data = message_data
         self.attachments = attachments
 
-    def attach(self, name: str, content: t.Union[str, bytes], encode: bool = True) -> None:
+    def attach(self, name: str, content: str, encode: bool = True) -> None:
         """Helper method to add base64 encode the attachments"""
         if not self.attachments:
             self.attachments = {}
@@ -112,12 +113,7 @@ class AsyncAPIClient(AsyncClientBase):
     SEND_EMAIL_ENDPOINT = "/send/email"
 
     def __init__(
-        self,
-        key: str,
-        url: t.Optional[str] = None,
-        region: Region = Regions.US,
-        retries: int = 3,
-        timeout: int = 10
+        self, key: str, url: t.Optional[str] = None, region: Region = Regions.US, retries: int = 3, timeout: int = 10
     ):
         if not isinstance(region, Region):
             raise AsyncCustomerIOError("invalid region provided")
@@ -134,5 +130,5 @@ class AsyncAPIClient(AsyncClientBase):
             "POST",
             join_url(self.base_url, self.API_PREFIX, self.SEND_EMAIL_ENDPOINT),
             json_payload=request.to_dict(),
-            headers={"Authorization": "Bearer {key}".format(key=self.key)}
+            headers={"Authorization": "Bearer {key}".format(key=self.key)},
         )

@@ -56,7 +56,7 @@ known_third_party = [
 sections = [
     "FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"
 ]
-known_first_party = "async_customerio,.tests/"
+known_first_party = "async_customerio,tests"
 no_lines_before = "STDLIB"
 default_section = "FIRSTPARTY"
 lines_after_imports = 2

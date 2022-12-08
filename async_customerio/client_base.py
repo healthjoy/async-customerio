@@ -3,11 +3,11 @@ Implements the base client that is used by other classes to make requests
 """
 import logging
 import typing as t
-import pkg_resources
 import uuid
 
 import httpx
 
+import pkg_resources
 from async_customerio.utils import sanitize
 
 
@@ -37,7 +37,7 @@ class AsyncClientBase:
         *,
         json_payload: t.Dict[str, t.Any] = None,
         headers: t.Dict[str, str] = None,
-        auth: t.Tuple[t.Union[str, bytes], t.Union[str, bytes]] = None
+        auth: t.Optional[t.Tuple[str, str]] = None
     ) -> t.Union[dict]:
         """
         Sends an HTTP call using the ``httpx`` library.
@@ -64,10 +64,7 @@ class AsyncClientBase:
                 headers,
             )
             raw_cio_response: httpx.Response = await client.request(
-                method,
-                url,
-                json=json_payload and sanitize(json_payload),
-                headers=merged_headers
+                method, url, json=json_payload and sanitize(json_payload), headers=merged_headers
             )
             raw_cio_response.raise_for_status()
             logging.debug(
