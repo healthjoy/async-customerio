@@ -95,7 +95,9 @@ jobs:
           custom_cache_key_element: v1.2
 
       - name: Static type checker
-        run: mypy --install-types --no-error-summary --hide-error-codes --follow-imports=skip async_customerio
+        run: |
+          python -m pip install types-setuptools
+          mypy --install-types --no-error-summary --hide-error-codes --follow-imports=skip async_customerio
 
   test:
     needs: [ linters-black, linters-mypy ]
