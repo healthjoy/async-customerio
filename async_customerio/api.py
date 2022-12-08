@@ -1,5 +1,5 @@
 """
-Implements the client that interacts with Customer.io's App API using app keys.
+Implements the client that interacts with Customer.io"s App API using app keys.
 """
 import base64
 import typing as t
@@ -66,7 +66,7 @@ class SendEmailRequest:
 
         if encode:
             if isinstance(content, str):
-                content = base64.b64encode(content.encode('utf-8')).decode()
+                content = base64.b64encode(content.encode("utf-8")).decode()
             else:
                 content = base64.b64encode(content).decode()
 
