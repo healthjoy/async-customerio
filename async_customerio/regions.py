@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass()
@@ -10,5 +10,5 @@ class Region:
 
 @dataclass(frozen=True, eq=False, init=False)
 class Regions:
-    US: Region = Region("us", "track.customer.io", "api.customer.io")
-    EU: Region = Region("eu", "track-eu.customer.io", "api-eu.customer.io")
+    US: Region = field(default_factory=lambda: Region("us", "track.customer.io", "api.customer.io"))
+    EU: Region = field(default_factory=lambda: Region("eu", "track-eu.customer.io", "api-eu.customer.io"))
