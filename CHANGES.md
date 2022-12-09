@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0
+
+  * ``AsyncClientBase`` has been adjusted to handle properly non-successful codes and connection retries.
+  * Class ``SendEmailRequest`` has been updated with type annotations.
+
 ## 0.2.0
 
   * `README.md` has been updated with examples of how to use.

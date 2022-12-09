@@ -5,6 +5,7 @@ import base64
 import typing as t
 
 from async_customerio.client_base import AsyncClientBase
+from async_customerio.constants import CIOID, EMAIL, ID
 from async_customerio.errors import AsyncCustomerIOError
 from async_customerio.regions import Region, Regions
 from async_customerio.utils import join_url
@@ -17,22 +18,22 @@ class SendEmailRequest:
         self,
         transactional_message_id: t.Union[str, int] = None,
         to: str = None,
-        identifiers=None,
+        identifiers: t.Dict[t.Union[CIOID, ID, EMAIL], t.Union[str, int]] = None,
         _from: str = None,
-        headers=None,
+        headers: t.Dict[str, str] = None,
         reply_to: str = None,
-        bcc=None,
+        bcc: str = None,
         subject: str = None,
-        preheader=None,
-        body=None,
+        preheader: str = None,
+        body: str = None,
         plaintext_body: str = None,
-        amp_body=None,
-        fake_bcc=None,
+        amp_body: str = None,
+        fake_bcc: str = None,
         disable_message_retention: bool = None,
         send_to_unsubscribed: bool = None,
         tracked: bool = None,
-        queue_draft=None,
-        message_data=None,
+        queue_draft: bool = None,
+        message_data: dict = None,
         attachments: t.Dict[str, str] = None,
     ):
 
