@@ -7,7 +7,7 @@
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/async-customerio.svg)](https://pypi.python.org/pypi/async-customerio/)
 [![GitHub Workflow Status for CI](https://img.shields.io/github/workflow/status/healthjoy/async-customerio/CI?label=CI&logo=github)](https://github.com/healthjoy/async-customerio/actions?query=workflow%3ACI)
 [![Codacy coverage](https://img.shields.io/codacy/coverage/b6a59cdf5ca64eab9104928d4f9bbb97?logo=codacy)](https://app.codacy.com/gh/healthjoy/async-customerio/dashboard)
-
+[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/3629b50827ef4e89ba0eaa5c09584273)](https://www.codacy.com/gh/healthjoy/async-customerio/dashboard?utm_source=github.com&utm_medium=referral&utm_content=healthjoy/async-customerio&utm_campaign=Badge_Coverage)
 
   * Free software: MIT license
   * Requires: Python 3.7+
