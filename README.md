@@ -13,7 +13,10 @@
 
 ## Features
 
-  *
+  * Fully async
+  * Interface preserved as Official Python Client `customerio` has
+  * Send push notification
+  * Send messages
 
 ## Installation
 ```shell script
@@ -21,7 +24,39 @@ $ pip install async-customerio
 ```
 
 ## Getting started
-TBD...
+```python
+import asyncio
+
+from async_customerio import AsyncCustomerIO, Regions
+
+
+async def main():
+    site_id = "Some-id-gotten-from-CustomerIO"
+    api_key = "Some-key-gotten-from-CustomerIO"
+    cio = AsyncCustomerIO(site_id, api_key, region=Regions.US)
+    await cio.identify(id=5, email="customer@example.com", first_name="John", last_name="Doh", subscription_plan="premium")
+    await cio.track(customer_id=5, name="product.purchased", product_sku="XYZ-12345", price=23.45)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+#### Instantiating `AsyncCustomerIO` object
+
+Create an instance of the client with your [Customer.io credentials](https://fly.customer.io/settings/api_credentials).
+
+```python
+
+from async_customerio import AsyncCustomerIO, Regions
+
+
+cio = AsyncCustomerIO(site_id, api_key, region=Regions.US)
+```
+
+`region` is optional and takes one of two values — `Regions.US` or `Regions.EU`. If you do not specify your region, we assume
+that your account is based in the US (`Regions.US`). If your account is based in the EU and you do not provide the correct region
+(`Regions.EU`), we'll route requests to our EU data centers accordingly, however this may cause data to be logged in the US.
 
 ## License
 
