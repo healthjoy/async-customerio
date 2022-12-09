@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
@@ -15,6 +16,7 @@ def fake_async_customerio(faker_):
         site_id=faker_.pystr(),
         api_key=faker_.pystr(),
         host="fake-track.customerio.io",
+        retries=1,
     )
 
 
@@ -191,3 +193,31 @@ async def test_merge_customers_empty_customer_id(
 ):
     with pytest.raises(AsyncCustomerIOError, match=error_message):
         await fake_async_customerio.merge_customers(primary_id_type, primary_id, secondary_id_type, secondary_id)
+
+
+@pytest.mark.parametrize(
+    "method, method_arguments", (
+        ("identify", {"id_": 1, "name": "Jack"}),
+        ("track", {"customer_id": 1, "name": "some-event"}),
+        ("track_anonymous", {"anonymous_id": "1111-2", "name": "some-event"}),
+        ("pageview", {"customer_id": 1, "page": "home-screen"}),
+        ("backfill", {"customer_id": 1, "name": "home-screen", "timestamp": datetime.utcnow()}),
+        ("delete", {"customer_id": 1}),
+        ("add_device", {"customer_id": 1, "device_id": "some-device-id", "platform": "ios"}),
+        ("delete_device", {"customer_id": 1, "device_id": "some-device-id"}),
+        ("suppress", {"customer_id": 1}),
+        ("unsuppress", {"customer_id": 1}),
+        ("merge_customers", {"primary_id_type": CIOID, "primary_id": 1, "secondary_id_type": ID, "secondary_id": 9}),
+    )
+)
+async def test_unauthorized_request(method, method_arguments, fake_async_customerio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=401)
+    with pytest.raises(AsyncCustomerIOError):
+        await getattr(fake_async_customerio, method)(**method_arguments)
+
+
+@pytest.mark.parametrize("connection_error", (httpx.ConnectError, httpx.ConnectTimeout))
+async def test_client_connection_handling(connection_error, fake_async_customerio, faker_, httpx_mock: HTTPXMock):
+    httpx_mock.add_exception(connection_error("something went wrong"))
+    with pytest.raises(AsyncCustomerIOError):
+        await fake_async_customerio.identify(faker_.pyint(min_value=100))

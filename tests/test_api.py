@@ -1,5 +1,6 @@
 import base64
 
+import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
@@ -15,7 +16,7 @@ class FakeSendRequest:
 
 @pytest.fixture()
 def fake_async_api_client(faker_):
-    return AsyncAPIClient(key=faker_.pystr(), url="https://fake-track.customerio.io")
+    return AsyncAPIClient(key=faker_.pystr(), url="https://fake-track.customerio.io", retries=1)
 
 
 @pytest.mark.parametrize(
@@ -55,3 +56,18 @@ async def test_wrong_region_provided(faker_):
         AsyncAPIClient(faker_.pystr(), region="CN")
 
 
+async def test_unauthorized_request(fake_async_api_client, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=401)
+    with pytest.raises(AsyncCustomerIOError):
+        await fake_async_api_client.send_email(
+            SendEmailRequest(to="johnsmith@doh.com", _from="johndoh@smith.com", body="Hi there!")
+        )
+
+
+@pytest.mark.parametrize("connection_error", (httpx.ConnectError, httpx.ConnectTimeout))
+async def test_client_connection_handling(connection_error, fake_async_api_client, httpx_mock: HTTPXMock):
+    httpx_mock.add_exception(connection_error("something went wrong"))
+    with pytest.raises(AsyncCustomerIOError):
+        await fake_async_api_client.send_email(
+            SendEmailRequest(to="johnsmith@doh.com", _from="johndoh@smith.com", body="Hi there!")
+        )

@@ -8,7 +8,14 @@ import uuid
 import httpx
 
 import pkg_resources
+from async_customerio.errors import AsyncCustomerIOError
 from async_customerio.utils import sanitize
+
+
+CUSTOMERIO_UNAVAILABLE_MESSAGE = """Failed to receive valid response after {count} retries.
+Check system status at http://status.customer.io.
+Last caught exception -- {klass}: {message}
+"""
 
 
 class AsyncClientBase:
@@ -37,7 +44,7 @@ class AsyncClientBase:
         *,
         json_payload: t.Dict[str, t.Any] = None,
         headers: t.Dict[str, str] = None,
-        auth: t.Optional[t.Tuple[str, str]] = None
+        auth: t.Optional[t.Tuple[str, str]] = None,
     ) -> t.Union[dict]:
         """
         Sends an HTTP call using the ``httpx`` library.
@@ -63,10 +70,20 @@ class AsyncClientBase:
                 json_payload,
                 headers,
             )
-            raw_cio_response: httpx.Response = await client.request(
-                method, url, json=json_payload and sanitize(json_payload), headers=merged_headers
-            )
-            raw_cio_response.raise_for_status()
+            try:
+                raw_cio_response: httpx.Response = await client.request(
+                    method, url, json=json_payload and sanitize(json_payload), headers=merged_headers
+                )
+                result_status = raw_cio_response.status_code
+                if result_status != 200:
+                    raise AsyncCustomerIOError(f"{result_status}: {url} {json_payload} {raw_cio_response.text}")
+            except Exception as err:
+                # Raise exception alerting user that the system might be
+                # experiencing an outage and refer them to system status page.
+                raise AsyncCustomerIOError(
+                    CUSTOMERIO_UNAVAILABLE_MESSAGE.format(klass=type(err), message=err, count=self.retries)
+                )
+
             logging.debug(
                 "Response Code: %s, Time spent to make a request: %s",
                 raw_cio_response.status_code,
