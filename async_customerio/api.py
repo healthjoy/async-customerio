@@ -4,11 +4,17 @@ Implements the client that interacts with Customer.io"s App API using app keys.
 import base64
 import typing as t
 
+from typing_extensions import TypedDict
+
 from async_customerio.client_base import AsyncClientBase
-from async_customerio.constants import CIOID, EMAIL, ID
 from async_customerio.errors import AsyncCustomerIOError
 from async_customerio.regions import Region, Regions
 from async_customerio.utils import join_url
+
+
+IdentifierID = TypedDict("IdentifierID", {"id": t.Union[str, int]})
+IdentifierEMAIL = TypedDict("IdentifierEMAIL", {"email": str})
+IdentifierCIOID = TypedDict("IdentifierCIOID", {"cio_id": t.Union[str, int]})
 
 
 class SendEmailRequest:
@@ -18,7 +24,7 @@ class SendEmailRequest:
         self,
         transactional_message_id: t.Union[str, int] = None,
         to: str = None,
-        identifiers: t.Dict[t.Union[CIOID, ID, EMAIL], t.Union[str, int]] = None,
+        identifiers: t.Union[IdentifierID, IdentifierEMAIL, IdentifierCIOID] = None,
         _from: str = None,
         headers: t.Dict[str, str] = None,
         reply_to: str = None,

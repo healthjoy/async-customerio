@@ -51,7 +51,7 @@ mypy = "~0.950"
 [tool.isort]
 atomic = true
 known_third_party = [
-    "faker", "httpx", "pytest", "pytest_httpx"
+    "faker", "httpx", "pytest", "pytest_httpx", "typing_extensions"
 ]
 sections = [
     "FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"
