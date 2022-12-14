@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+
+- Class ``AsyncCustomerIO`` updated with docstrings.
+
 ## 0.3.0
 
 - ``AsyncClientBase`` has been adjusted to handle properly non-successful codes and connection retries.
