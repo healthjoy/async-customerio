@@ -70,7 +70,13 @@ class AsyncCustomerIO(AsyncClientBase):
         return template.format(host=host.strip("/"), port=port, prefix=prefix.strip("/"))
 
     async def identify(self, id_: t.Union[str, int], **attrs) -> None:
-        """Identify a single customer by their unique id, and optionally add attributes."""
+        """
+        Identify a single customer by their unique id, and optionally add attributes.
+
+        :param id_: the unique value representing a person. The values you use to identify a person may be an
+            ``id``, ``email`` address, or the ``cio_id`` (when updating people), depending on your workspace settings.
+            When you reference people by ``cio_id``, you must prefix the value with ``cio_``.
+        """
         if not id_:
             raise AsyncCustomerIOError("id_ cannot be blank in identify")
         await self.send_request(
@@ -78,7 +84,14 @@ class AsyncCustomerIO(AsyncClientBase):
         )
 
     async def track(self, customer_id: t.Union[str, int], name: str, **data) -> None:
-        """Track an event for a given customer_id."""
+        """
+        Track an event for a given customer_id.
+
+        :param customer_id: the unique value representing a person. The values you use to identify a person may be an
+            ``id``, ``email`` address, or the ``cio_id`` (when updating people), depending on your workspace settings.
+            When you reference people by ``cio_id``, you must prefix the value with ``cio_``.
+        :param name: the name of the event. This is how you'll reference the event in campaigns or segments.
+        """
         if not customer_id:
             raise AsyncCustomerIOError("customer_id cannot be blank in track")
 
@@ -88,7 +101,13 @@ class AsyncCustomerIO(AsyncClientBase):
         )
 
     async def track_anonymous(self, anonymous_id: str, name: str, **data) -> None:
-        """Track an event for a given anonymous_id."""
+        """
+        Track an event for a given anonymous_id.
+
+        An anonymous event represents a person you haven't identified yet.
+        :param anonymous_id: an identifier for an anonymous event.
+        :param name: the name of the event.
+        """
         post_data = {"name": name, "data": sanitize(data)}
         if anonymous_id:
             post_data["anonymous_id"] = anonymous_id
@@ -124,14 +143,30 @@ class AsyncCustomerIO(AsyncClientBase):
         )
 
     async def delete(self, customer_id: t.Union[str, int]) -> None:
-        """Delete a customer profile."""
+        """
+        Delete a customer profile.
+
+        Deleting a customer removes them, and all of their information, from Customer.io.
+        :param customer_id: the unique value representing a person. The values you use to identify a person may be an
+            ``id``, ``email`` address, or the ``cio_id`` (when updating people), depending on your workspace settings.
+            When you reference people by ``cio_id``, you must prefix the value with ``cio_``.
+        """
         if not customer_id:
             raise AsyncCustomerIOError("customer_id cannot be blank in delete")
 
         await self.send_request("DELETE", join_url(self.base_url, self.CUSTOMER_ENDPOINT.format(id=customer_id)))
 
     async def add_device(self, customer_id: t.Union[str, int], device_id: str, platform: str, **data) -> None:
-        """Add a device to a customer profile."""
+        """
+        Add or update a device to a customer profile.
+
+        Customers can have more than one device.
+        :param customer_id: the unique value representing a person. The values you use to identify a person may be an
+            ``id``, ``email`` address, or the ``cio_id`` (when updating people), depending on your workspace settings.
+            When you reference people by ``cio_id``, you must prefix the value with ``cio_``.
+        :param device_id: the device token.
+        :param platform: the device/messaging platform. Should be either **ios** or **android**
+        """
         if not customer_id:
             raise AsyncCustomerIOError("customer_id cannot be blank in add_device")
 
@@ -148,7 +183,15 @@ class AsyncCustomerIO(AsyncClientBase):
         )
 
     async def delete_device(self, customer_id: t.Union[str, int], device_id: str) -> None:
-        """Delete a device from a customer profile."""
+        """
+        Delete a customer device.
+
+        Delete a device from a customer profile.
+        :param customer_id: the unique value representing a person. The values you use to identify a person may be an
+            ``id``, ``email`` address, or the ``cio_id`` (when updating people), depending on your workspace settings.
+            When you reference people by ``cio_id``, you must prefix the value with ``cio_``.
+        :param device_id: the ID of the device you want to delete.
+        """
         if not customer_id:
             raise AsyncCustomerIOError("customer_id cannot be blank in delete_device")
 
@@ -161,12 +204,31 @@ class AsyncCustomerIO(AsyncClientBase):
         )
 
     async def suppress(self, customer_id: t.Union[str, int]) -> None:
+        """
+        Suppress a customer profile.
+
+        Delete a customer profile and prevent the person's identifier(s) from being re-added to your workspace.
+        :param customer_id: the unique value representing a person. The values you use to identify a person may be an
+            ``id``, ``email`` address, or the ``cio_id`` (when updating people), depending on your workspace settings.
+            When you reference people by ``cio_id``, you must prefix the value with ``cio_``.
+        """
         if not customer_id:
             raise AsyncCustomerIOError("customer_id cannot be blank in suppress")
 
         await self.send_request("POST", join_url(self.base_url, self.CUSTOMER_SUPPRESS_ENDPOINT.format(id=customer_id)))
 
     async def unsuppress(self, customer_id: t.Union[str, int]) -> None:
+        """
+        Unsuppress a customer profile.
+
+        Unsuppressing a profile allows you to add the customer back to Customer.io. Unsuppressing a profile does not
+        recreate the profile that you previously suppressed. Rather, it just makes the identifier available again.
+        Identifying a person after unsuppressing them creates a new profile, with none of the history of the previously
+        suppressed identifier.
+        :param customer_id: the unique value representing a person. The values you use to identify a person may be an
+            ``id``, ``email`` address, or the ``cio_id`` (when updating people), depending on your workspace settings.
+            When you reference people by ``cio_id``, you must prefix the value with ``cio_``.
+        """
         if not customer_id:
             raise AsyncCustomerIOError("customer_id cannot be blank in unsuppress")
 
@@ -181,7 +243,16 @@ class AsyncCustomerIO(AsyncClientBase):
         secondary_id_type: str,
         secondary_id: t.Union[str, int],
     ) -> None:
-        """Merge secondary profile into primary profile."""
+        """
+        Merge duplicate profiles.
+
+        Merge two customer profiles together. The payload contains ``primary`` and ``secondary`` profile objects.
+        The primary profile remains after the merge and the secondary is deleted. This operation is not reversible.
+        :param primary_id_type: type of the identifiers, should be one of ``id``, ``email`` or ``cio
+        :param primary_id: the person that you want to remain after the merge.
+        :param secondary_id_type: type of the identifiers, should be one of ``id``, ``email`` or ``cio
+        :param secondary_id: the person that you want to delete after the merge,
+        """
         if not self._is_valid_id_type(primary_id_type):
             raise AsyncCustomerIOError("invalid primary id type")
 
