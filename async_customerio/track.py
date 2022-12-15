@@ -268,5 +268,15 @@ class AsyncCustomerIO(AsyncClientBase):
         post_data = {"primary": {primary_id_type: primary_id}, "secondary": {secondary_id_type: secondary_id}}
         await self.send_request("POST", join_url(self.base_url, self.MERGE_CUSTOMERS_ENDPOINT), json_payload=post_data)
 
-    async def send_request(self, *args, **kwargs) -> t.Union[dict]:
-        return await super().send_request(*args, **kwargs, auth=(self.site_id, self.api_key))
+    async def send_request(
+        self,
+        method: str,
+        url: str,
+        *,
+        json_payload: t.Dict[str, t.Any] = None,
+        headers: t.Dict[str, str] = None,
+        auth: t.Optional[t.Tuple[str, str]] = None
+    ) -> t.Union[dict]:
+        return await super().send_request(
+            method, url, json_payload=json_payload, headers=headers, auth=(self.site_id, self.api_key)
+        )
