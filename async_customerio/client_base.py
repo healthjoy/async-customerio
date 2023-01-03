@@ -32,7 +32,7 @@ class AsyncClientBase:
         """Prepare HTTP headers that will be used to request CustomerIO."""
         logging.debug("Preparing HTTP headers for all the subsequent requests")
         return {
-            "Content-Type": "application/json; UTF-8",
+            "Content-Type": "application/json",
             "X-Request-Id": self._get_request_id(),
             "User-Agent": "async-customerio/{0}".format(pkg_resources.get_distribution("async-customerio").version),
         }
