@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "async-customerio"
-version = "0.4.0"
+version = "0.4.1"
 description = "Async CustomerIO Client - a Python client to interact with CustomerIO in an async fashion."
 license = "MIT"
 authors = [
