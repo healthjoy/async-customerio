@@ -1,6 +1,4 @@
 # async-customerio is a lightweight asynchronous client to interact with CustomerIO
-
-[![PyPI download total](https://img.shields.io/pypi/dt/async-customerio.svg)](https://pypi.python.org/pypi/async-customerio/)
 [![PyPI download month](https://img.shields.io/pypi/dm/async-customerio.svg)](https://pypi.python.org/pypi/async-customerio/)
 [![PyPI version fury.io](https://badge.fury.io/py/async-customerio.svg)](https://pypi.python.org/pypi/async-customerio/)
 [![PyPI license](https://img.shields.io/pypi/l/async-customerio.svg)](https://pypi.python.org/pypi/async-customerio/)
