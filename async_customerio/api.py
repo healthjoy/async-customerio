@@ -41,6 +41,9 @@ class SendEmailRequest:
         queue_draft: bool = None,
         message_data: dict = None,
         attachments: t.Dict[str, str] = None,
+        disable_css_preproceessing: bool = None,
+        send_at: int = None,
+        language: str = None,
     ):
 
         self.transactional_message_id = transactional_message_id
@@ -62,6 +65,9 @@ class SendEmailRequest:
         self.queue_draft = queue_draft
         self.message_data = message_data
         self.attachments = attachments
+        self.disable_css_preproceessing = disable_css_preproceessing
+        self.send_at = send_at
+        self.language = language
 
     def attach(self, name: str, content: str, encode: bool = True) -> None:
         """Helper method to add base64 encode the attachments"""
@@ -104,6 +110,9 @@ class SendEmailRequest:
             queue_draft="queue_draft",
             message_data="message_data",
             attachments="attachments",
+            disable_css_preproceessing="disable_css_preproceessing",
+            send_at="send_at",
+            language="language",
         )
 
         data = {}
