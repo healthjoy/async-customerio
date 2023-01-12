@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0
+
+- Add a couple of new attributes to object ``SendEmailRequest``
+
 ## 0.4.1
 
 - The ``Content-Type`` we use has been updated so that Customer.io is happy when we try to send emails.
