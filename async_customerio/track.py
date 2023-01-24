@@ -69,18 +69,18 @@ class AsyncCustomerIO(AsyncClientBase):
 
         return template.format(host=host.strip("/"), port=port, prefix=prefix.strip("/"))
 
-    async def identify(self, id_: t.Union[str, int], **attrs) -> None:
+    async def identify(self, identifier: t.Union[str, int], **attrs) -> None:
         """
         Identify a single customer by their unique id, and optionally add attributes.
 
-        :param id_: the unique value representing a person. The values you use to identify a person may be an
+        :param identifier: the unique value representing a person. The values you use to identify a person may be an
             ``id``, ``email`` address, or the ``cio_id`` (when updating people), depending on your workspace settings.
             When you reference people by ``cio_id``, you must prefix the value with ``cio_``.
         """
-        if not id_:
-            raise AsyncCustomerIOError("id_ cannot be blank in identify")
+        if not identifier:
+            raise AsyncCustomerIOError("identifier cannot be blank in identify")
         await self.send_request(
-            "PUT", join_url(self.base_url, self.CUSTOMER_ENDPOINT.format(id=id_)), json_payload=attrs
+            "PUT", join_url(self.base_url, self.CUSTOMER_ENDPOINT.format(id=identifier)), json_payload=attrs
         )
 
     async def track(self, customer_id: t.Union[str, int], name: str, **data) -> None:
