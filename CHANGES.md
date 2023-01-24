@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.1
+
+- [FIX] Change parameter name from ``id_`` to ``identifier`` of the method ``identify`` to avoid naming collision.
+
 ## 0.5.0
 
 - Add a couple of new attributes to object ``SendEmailRequest``

@@ -28,7 +28,7 @@ async def test_identify(fake_async_customerio, faker_, httpx_mock: HTTPXMock):
 
 
 async def test_identify_empty_id(fake_async_customerio):
-    with pytest.raises(AsyncCustomerIOError, match="id_ cannot be blank in identify"):
+    with pytest.raises(AsyncCustomerIOError, match="identifier cannot be blank in identify"):
         await fake_async_customerio.identify(0, first_name="John", last_name="Smith")
 
 
@@ -197,7 +197,7 @@ async def test_merge_customers_empty_customer_id(
 
 @pytest.mark.parametrize(
     "method, method_arguments", (
-        ("identify", {"id_": 1, "name": "Jack"}),
+        ("identify", {"identifier": 1, "name": "Jack"}),
         ("track", {"customer_id": 1, "name": "some-event"}),
         ("track_anonymous", {"anonymous_id": "1111-2", "name": "some-event"}),
         ("pageview", {"customer_id": 1, "page": "home-screen"}),
