@@ -32,16 +32,16 @@ class SendEmailRequest:
         subject: str = None,
         preheader: str = None,
         body: str = None,
-        plaintext_body: str = None,
-        amp_body: str = None,
+        body_amp: str = None,
+        body_plain: str = None,
         fake_bcc: str = None,
-        disable_message_retention: bool = None,
-        send_to_unsubscribed: bool = None,
-        tracked: bool = None,
-        queue_draft: bool = None,
+        disable_message_retention: bool = False,
+        send_to_unsubscribed: bool = True,
+        tracked: bool = True,
+        queue_draft: bool = False,
         message_data: dict = None,
         attachments: t.Dict[str, str] = None,
-        disable_css_preproceessing: bool = None,
+        disable_css_preproceessing: bool = False,
         send_at: int = None,
         language: str = None,
     ):
@@ -56,8 +56,8 @@ class SendEmailRequest:
         self.subject = subject
         self.preheader = preheader
         self.body = body
-        self.plaintext_body = plaintext_body
-        self.amp_body = amp_body
+        self.body_plain = body_plain
+        self.body_amp = body_amp
         self.fake_bcc = fake_bcc
         self.disable_message_retention = disable_message_retention
         self.send_to_unsubscribed = send_to_unsubscribed
@@ -101,8 +101,8 @@ class SendEmailRequest:
             subject="subject",
             preheader="preheader",
             body="body",
-            plaintext_body="plaintext_body",
-            amp_body="amp_body",
+            body_amp="body_amp",
+            body_plain="body_plain",
             fake_bcc="fake_bcc",
             disable_message_retention="disable_message_retention",
             send_to_unsubscribed="send_to_unsubscribed",
