@@ -45,7 +45,6 @@ class SendEmailRequest:
         send_at: int = None,
         language: str = None,
     ):
-
         self.transactional_message_id = transactional_message_id
         self.to = to
         self.identifiers = identifiers

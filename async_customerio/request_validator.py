@@ -2,12 +2,7 @@ import hashlib
 import hmac
 
 
-def validate_signature(
-        signing_key: str, 
-        timestamp: int, 
-        request_body: bytes, 
-        signature: str
-    ) -> bool:
+def validate_signature(signing_key: str, timestamp: int, request_body: bytes, signature: str) -> bool:
     """Validate that request was sent from Customer.io
     Doc: https://customer.io/docs/journeys/webhooks/#securely-verify-requests
 
@@ -18,11 +13,6 @@ def validate_signature(
 
     :returns: True if the request passes validation, False if not
     """
-    timestamp = str(timestamp).encode()
-    payload = b'v0:' + timestamp + b':' + request_body
-    computed_signature = hmac.new(
-        key=signing_key.encode(), 
-        msg=payload, 
-        digestmod=hashlib.sha256
-    ).hexdigest()
+    payload = b'v0:' + str(timestamp).encode() + b':' + request_body
+    computed_signature = hmac.new(key=signing_key.encode(), msg=payload, digestmod=hashlib.sha256).hexdigest()
     return hmac.compare_digest(computed_signature, signature)

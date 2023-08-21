@@ -1,5 +1,9 @@
 # Changelog
 
+
+## 1.1.0
+- Added helper function for validation of request origin using X-CIO-Signature and X-CIO-Timestamps
+
 ## 1.0.0
 
 - [BREAKING] For consistency across APIs following actions have been taken:
