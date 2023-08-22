@@ -40,6 +40,32 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
+## Securely verify requests [doc](https://customer.io/docs/journeys/webhooks/#securely-verify-requests)
+ 
+```python
+from async_customerio import validate_signature
+
+
+def main():
+    webhook_signing_key = "755781b5e03a973f3405a85474d5a032a60fd56fabaad66039b12eadd83955fa"
+    x_cio_timestamp = 1692633432  # header  value
+    x_cio_signature = "d7c655389bb364d3e8bdbb6ec18a7f1b6cf91f39bba647554ada78aa61de37b9"  # header value
+    body = b'{"key": "value"}'
+    if validate_signature(
+          signing_key=webhook_signing_key,
+          timestamp=x_cio_timestamp,
+          request_body=body,
+          signature=x_cio_signature
+    ):
+        print('Request is sent from CustomerIO')
+    else:
+        print('Malicious request received')
+
+
+if __name__ == "__main__":
+    main()
+```
+
 #### Instantiating `AsyncCustomerIO` object
 
 Create an instance of the client with your [Customer.io credentials](https://fly.customer.io/settings/api_credentials).
