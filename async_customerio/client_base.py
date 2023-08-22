@@ -4,6 +4,7 @@ Implements the base client that is used by other classes to make requests
 import logging
 import typing as t
 import uuid
+from typing import Optional
 
 import httpx
 
@@ -42,8 +43,8 @@ class AsyncClientBase:
         method: str,
         url: str,
         *,
-        json_payload: t.Dict[str, t.Any] = None,
-        headers: t.Dict[str, str] = None,
+        json_payload: Optional[t.Dict[str, t.Any]] = None,
+        headers: Optional[t.Dict[str, str]] = None,
         auth: t.Optional[t.Tuple[str, str]] = None,
     ) -> t.Union[dict]:
         """

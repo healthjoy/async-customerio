@@ -3,6 +3,7 @@ Implements the async client that interacts with Customer.io's Track API using Si
 """
 import typing as t
 from datetime import datetime
+from typing import Optional
 from urllib.parse import quote
 
 from async_customerio.client_base import AsyncClientBase
@@ -32,10 +33,10 @@ class AsyncCustomerIO(AsyncClientBase):
         self,
         site_id: str,
         api_key: str,
-        host: str = None,
+        host: Optional[str] = None,
         region: Region = Regions.US,
-        port: int = None,
-        url_prefix: str = None,
+        port: Optional[int] = None,
+        url_prefix: Optional[str] = None,
         retries: int = 3,
         timeout: int = 10,
     ):
@@ -273,8 +274,8 @@ class AsyncCustomerIO(AsyncClientBase):
         method: str,
         url: str,
         *,
-        json_payload: t.Dict[str, t.Any] = None,
-        headers: t.Dict[str, str] = None,
+        json_payload: Optional[t.Dict[str, t.Any]] = None,
+        headers: Optional[t.Dict[str, str]] = None,
         auth: t.Optional[t.Tuple[str, str]] = None
     ) -> t.Union[dict]:
         return await super().send_request(

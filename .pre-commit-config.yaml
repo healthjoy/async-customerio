@@ -33,6 +33,6 @@ repos:
     rev: v1.1.1
     hooks:
       - id: mypy
-        args: [--no-error-summary, --hide-error-codes, --follow-imports=skip, --implicit-optional]
+        args: [--no-error-summary, --hide-error-codes, --follow-imports=skip]
         files: ^async_customerio/
         additional_dependencies: [types-setuptools]

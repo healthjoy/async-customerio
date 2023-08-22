@@ -3,6 +3,7 @@ Implements the client that interacts with Customer.io"s App API using app keys.
 """
 import base64
 import typing as t
+from typing import Optional
 
 from typing_extensions import TypedDict
 
@@ -22,28 +23,28 @@ class SendEmailRequest:
 
     def __init__(
         self,
-        transactional_message_id: t.Union[str, int] = None,
-        to: str = None,
-        identifiers: t.Union[IdentifierID, IdentifierEMAIL, IdentifierCIOID] = None,
-        _from: str = None,
-        headers: t.Dict[str, str] = None,
-        reply_to: str = None,
-        bcc: str = None,
-        subject: str = None,
-        preheader: str = None,
-        body: str = None,
-        body_amp: str = None,
-        body_plain: str = None,
-        fake_bcc: str = None,
+        transactional_message_id: Optional[t.Union[str, int]] = None,
+        to: Optional[str] = None,
+        identifiers: Optional[t.Union[IdentifierID, IdentifierEMAIL, IdentifierCIOID]] = None,
+        _from: Optional[str] = None,
+        headers: Optional[t.Dict[str, str]] = None,
+        reply_to: Optional[str] = None,
+        bcc: Optional[str] = None,
+        subject: Optional[str] = None,
+        preheader: Optional[str] = None,
+        body: Optional[str] = None,
+        body_amp: Optional[str] = None,
+        body_plain: Optional[str] = None,
+        fake_bcc: Optional[str] = None,
         disable_message_retention: bool = False,
         send_to_unsubscribed: bool = True,
         tracked: bool = True,
         queue_draft: bool = False,
-        message_data: dict = None,
-        attachments: t.Dict[str, str] = None,
+        message_data: Optional[dict] = None,
+        attachments: Optional[t.Dict[str, str]] = None,
         disable_css_preproceessing: bool = False,
-        send_at: int = None,
-        language: str = None,
+        send_at: Optional[int] = None,
+        language: Optional[str] = None,
     ):
         self.transactional_message_id = transactional_message_id
         self.to = to

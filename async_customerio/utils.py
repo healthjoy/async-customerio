@@ -1,6 +1,7 @@
 import math
 import typing as t
 from datetime import datetime, timezone
+from typing import Optional
 from urllib.parse import quote, urlencode, urljoin
 
 from .errors import AsyncCustomerIOError
@@ -32,7 +33,11 @@ def stringify_list(customer_ids: t.List[t.Union[str, int]]) -> t.List[str]:
 
 
 def join_url(
-    base: str, *parts: t.Union[str, int], params: dict = None, leading_slash: bool = False, trailing_slash: bool = False
+    base: str,
+    *parts: t.Union[str, int],
+    params: Optional[dict] = None,
+    leading_slash: bool = False,
+    trailing_slash: bool = False,
 ) -> str:
     """Construct a full ("absolute") URL by combining a "base URL" (base) with another URL (url) parts.
 
