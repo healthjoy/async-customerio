@@ -6,10 +6,10 @@ def validate_signature(signing_key: str, timestamp: int, request_body: bytes, si
     """Validate that request was sent from Customer.io
     Doc: https://customer.io/docs/journeys/webhooks/#securely-verify-requests
 
+    :param signing_key: value for SIGNING KEY from Customer.io
     :param timestamp: unix timestamp, value from header  X-CIO-Timestamp
     :param request_body: body of the request
     :param signature: value from header X-CIO-Signature
-    :param token: value for SIGNING KEY from Customer.io
 
     :returns: True if the request passes validation, False if not
     """
