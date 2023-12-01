@@ -48,7 +48,7 @@ jobs:
         env:
           POETRY_VERSION: 1.6.1
         run: |
-          pip install pip==23.2.1 setuptools==68.2.2
+          pip install pip==23.2.1 setuptools==69.0.2
           curl -sSL https://install.python-poetry.org | python3 -
           export VENV="$(poetry env info -p)"
           source ${VENV}/bin/activate
