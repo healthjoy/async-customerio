@@ -4,7 +4,7 @@ import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from async_customerio import AsyncAPIClient, SendEmailRequest, AsyncCustomerIOError
+from async_customerio import AsyncAPIClient, AsyncCustomerIOError, SendEmailRequest, SendPushRequest
 
 pytestmark = pytest.mark.asyncio
 
@@ -71,3 +71,34 @@ async def test_client_connection_handling(connection_error, fake_async_api_clien
         await fake_async_api_client.send_email(
             SendEmailRequest(to="johnsmith@doh.com", _from="johndoh@smith.com", body="Hi there!")
         )
+
+
+@pytest.mark.parametrize(
+    "send_push_request", (
+        SendPushRequest(transactional_message_id="3", identifiers={"id": "2"}),
+        SendPushRequest(transactional_message_id="3", to="last_used"),
+        SendPushRequest(
+            transactional_message_id="3",
+            custom_device={
+                "token": "XXXqwsdae123x213",
+                "platform": "android",
+                "last_used": 1701435945,
+            }
+        )
+    )
+)
+async def test_send_push(send_push_request, fake_async_api_client, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+    response = await fake_async_api_client.send_push(send_push_request)
+    assert response
+
+
+@pytest.mark.parametrize(
+    "invalid_request", (
+        {"to": "to@to.com", "from": "from@from.com", "body": '"body'},
+        FakeSendRequest("john@doh.com", "billy@jean.com", "Whiskey"),
+    )
+)
+async def test_send_push_invalid_request(invalid_request, fake_async_api_client):
+    with pytest.raises(AsyncCustomerIOError, match="invalid request provided"):
+        await fake_async_api_client.send_push(invalid_request)

@@ -1,5 +1,7 @@
 # Changelog
 
+## 1.2.0
+- Added support of sending transactional push notifications. More details of how to send Push Notifications via CustomerIO https://customer.io/docs/journeys/transactional-api/#transactional-push-notifications
 
 ## 1.1.0
 - Added helper function for validation of request origin using X-CIO-Signature and X-CIO-Timestamps
