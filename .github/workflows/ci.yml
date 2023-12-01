@@ -34,13 +34,10 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-          allow-prereleases: true
 
       - name: virtualenv cache
         uses: syphar/restore-virtualenv@v1.2
         id: cache-virtualenv
-        with:
-          custom_cache_key_element: v1.2
 
       - name: pip cache
         uses: syphar/restore-pip-download-cache@v1
@@ -73,11 +70,9 @@ jobs:
       - name: virtualenv cache
         uses: syphar/restore-virtualenv@v1.2
         id: cache-virtualenv
-        with:
-          custom_cache_key_element: v1.2
 
       - name: Check code style
-        run: poetry run black --check --line-length=120 --diff async_customerio
+        run: black --check --line-length=120 --diff async_customerio
 
   linters-mypy:
     needs: create-virtualenv
@@ -98,7 +93,7 @@ jobs:
       - name: Static type checker
         run: |
           python -m pip install types-setuptools
-          poetry run mypy --install-types --no-error-summary --hide-error-codes --follow-imports=skip async_customerio
+          mypy --install-types --no-error-summary --hide-error-codes --follow-imports=skip async_customerio
 
   test:
     needs: [ linters-black, linters-mypy ]
