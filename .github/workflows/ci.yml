@@ -93,7 +93,7 @@ jobs:
         run: poetry install --no-interaction --no-root
 
       - name: Check code style
-        run: black --check --line-length=120 --diff async_customerio
+        run: poetry run black --check --line-length=120 --diff async_customerio
 
   linters-mypy:
     needs: create-virtualenv
