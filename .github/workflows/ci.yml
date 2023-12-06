@@ -18,6 +18,9 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+env:
+  POETRY_VERSION: 1.5.1
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   create-virtualenv:
@@ -30,33 +33,33 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v3
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-          cache: 'pip' # caching pip dependencies
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip
+          restore-keys: ${{ runner.os }}-pip
 
-      - name: virtualenv cache
-        uses: syphar/restore-virtualenv@v1.2
-        id: cache-virtualenv
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: true
 
-      - name: pip cache
-        uses: syphar/restore-pip-download-cache@v1
-        if: steps.cache-virtualenv.outputs.cache-hit != 'true'
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
 
-      - name: Install Python dependencies
-        if: steps.cache-virtualenv.outputs.cache-hit != 'true'
-        env:
-          POETRY_VERSION: 1.5.1
-        run: |
-          pip install pip==23.2.1 setuptools==67.8.0
-          curl -sSL https://install.python-poetry.org | python3 -
-          export VENV="$(poetry env info -p)"
-          source ${VENV}/bin/activate
-          poetry install --no-interaction -vv
+      - name: Install Dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction -vv
 
       - name: Log currently installed packages and versions
-        run: pip list
+        run: poetry show
 
   linters-black:
     needs: create-virtualenv
@@ -65,12 +68,24 @@ jobs:
       - name: source code
         uses: actions/checkout@v3
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip
+          restore-keys: ${{ runner.os }}-pip
 
-      - name: virtualenv cache
-        uses: syphar/restore-virtualenv@v1.2
-        id: cache-virtualenv
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
 
       - name: Check code style
         run: black --check --line-length=120 --diff async_customerio
@@ -82,14 +97,24 @@ jobs:
       - name: source code
         uses: actions/checkout@v3
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
-
-      - name: virtualenv cache
-        uses: syphar/restore-virtualenv@v1.2
-        id: cache-virtualenv
         with:
-          custom_cache_key_element: v1.2
+          python-version: ${{ matrix.python-version }}
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip
+          restore-keys: ${{ runner.os }}-pip
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
 
       - name: Static type checker
         run: |
@@ -106,16 +131,24 @@ jobs:
       - name: source code
         uses: actions/checkout@v3
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip
+          restore-keys: ${{ runner.os }}-pip
 
-      - name: virtualenv cache
-        uses: syphar/restore-virtualenv@v1.2
-        id: cache-virtualenv
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
         with:
-          custom_cache_key_element: v1.2
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
 
       - name: Run pytest
         run: pytest tests/
