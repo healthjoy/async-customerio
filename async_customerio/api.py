@@ -2,8 +2,7 @@
 Implements the client that interacts with Customer.io"s App API using app keys.
 """
 import base64
-import typing as t
-from typing import Optional
+from typing import Dict, Literal, Optional, Union
 
 from typing_extensions import TypedDict
 
@@ -13,9 +12,13 @@ from async_customerio.regions import Region, Regions
 from async_customerio.utils import join_url
 
 
-IdentifierID = TypedDict("IdentifierID", {"id": t.Union[str, int]})
+IdentifierID = TypedDict("IdentifierID", {"id": Union[str, int]})
 IdentifierEMAIL = TypedDict("IdentifierEMAIL", {"email": str})
-IdentifierCIOID = TypedDict("IdentifierCIOID", {"cio_id": t.Union[str, int]})
+IdentifierCIOID = TypedDict("IdentifierCIOID", {"cio_id": Union[str, int]})
+CustomDevice = TypedDict(
+    "CustomDevice",
+    {"token": str, "platform": Literal["ios", "android"], "last_used": Optional[int], "attributes": dict},
+)
 
 
 class SendEmailRequest:
@@ -23,11 +26,11 @@ class SendEmailRequest:
 
     def __init__(
         self,
-        transactional_message_id: Optional[t.Union[str, int]] = None,
+        transactional_message_id: Optional[Union[str, int]] = None,
         to: Optional[str] = None,
-        identifiers: Optional[t.Union[IdentifierID, IdentifierEMAIL, IdentifierCIOID]] = None,
+        identifiers: Optional[Union[IdentifierID, IdentifierEMAIL, IdentifierCIOID]] = None,
         _from: Optional[str] = None,
-        headers: Optional[t.Dict[str, str]] = None,
+        headers: Optional[Dict[str, str]] = None,
         reply_to: Optional[str] = None,
         bcc: Optional[str] = None,
         subject: Optional[str] = None,
@@ -41,7 +44,7 @@ class SendEmailRequest:
         tracked: bool = True,
         queue_draft: bool = False,
         message_data: Optional[dict] = None,
-        attachments: Optional[t.Dict[str, str]] = None,
+        attachments: Optional[Dict[str, str]] = None,
         disable_css_preproceessing: bool = False,
         send_at: Optional[int] = None,
         language: Optional[str] = None,
@@ -124,12 +127,87 @@ class SendEmailRequest:
         return data
 
 
+class SendPushRequest:
+    """An object with all the options available for triggering a transactional push message."""
+
+    def __init__(
+        self,
+        transactional_message_id: Optional[Union[str, int]] = None,
+        to: Union[Literal["all", "last_used"], str] = "all",
+        identifiers: Optional[Union[IdentifierID, IdentifierEMAIL, IdentifierCIOID]] = None,
+        title: Optional[str] = None,
+        message: Optional[str] = None,
+        disable_message_retention: bool = False,
+        send_to_unsubscribed: bool = True,
+        queue_draft: bool = False,
+        message_data: Optional[dict] = None,
+        send_at: Optional[int] = None,
+        language: Optional[str] = None,
+        image_url: Optional[str] = None,
+        link: Optional[str] = None,
+        custom_data: Optional[dict] = None,
+        custom_device: Optional[CustomDevice] = None,
+        custom_payload: Optional[dict] = None,
+        sound: str = "default",
+    ) -> None:
+        self.transactional_message_id = transactional_message_id
+        self.to = to
+        self.identifiers = identifiers
+        self.disable_message_retention = disable_message_retention
+        self.send_to_unsubscribed = send_to_unsubscribed
+        self.queue_draft = queue_draft
+        self.message_data = message_data
+        self.send_at = send_at
+        self.language = language
+
+        self.title = title
+        self.message = message
+        self.image_url = image_url
+        self.link = link
+        self.custom_data = custom_data
+        self.custom_device = custom_device
+        self.custom_payload = custom_payload
+        self.sound = sound
+
+    def to_dict(self):
+        """Build a request payload from the object."""
+        field_map = dict(
+            # field name is the same as the payload field name
+            transactional_message_id="transactional_message_id",
+            to="to",
+            identifiers="identifiers",
+            disable_message_retention="disable_message_retention",
+            send_to_unsubscribed="send_to_unsubscribed",
+            queue_draft="queue_draft",
+            message_data="message_data",
+            send_at="send_at",
+            language="language",
+            title="title",
+            message="message",
+            image_url="image_url",
+            link="link",
+            custom_data="custom_data",
+            custom_payload="custom_payload",
+            device="custom_device",
+            sound="sound",
+        )
+
+        data = {}
+        for field, name in field_map.items():
+            value = getattr(self, field, None)
+            if value is not None:
+                data[name] = value
+
+        return data
+
+
 class AsyncAPIClient(AsyncClientBase):
     API_PREFIX = "/v1"
     SEND_EMAIL_ENDPOINT = "/send/email"
+    SEND_PUSH_NOTIFICATION_ENDPOINT = "/send/push"
 
     def __init__(
-        self, key: str, url: t.Optional[str] = None, region: Region = Regions.US, retries: int = 3, timeout: int = 10
+        self, key: str, url: Optional[str] = None, region: Region = Regions.US, retries: int = 3, timeout: int = 10
     ):
         if not isinstance(region, Region):
             raise AsyncCustomerIOError("invalid region provided")
@@ -145,6 +223,17 @@ class AsyncAPIClient(AsyncClientBase):
         return await self.send_request(
             "POST",
             join_url(self.base_url, self.API_PREFIX, self.SEND_EMAIL_ENDPOINT),
+            json_payload=request.to_dict(),
+            headers={"Authorization": "Bearer {key}".format(key=self.key)},
+        )
+
+    async def send_push(self, request: SendPushRequest) -> dict:
+        if not isinstance(request, SendPushRequest):
+            raise AsyncCustomerIOError("invalid request provided")
+
+        return await self.send_request(
+            "POST",
+            join_url(self.base_url, self.API_PREFIX, self.SEND_PUSH_NOTIFICATION_ENDPOINT),
             json_payload=request.to_dict(),
             headers={"Authorization": "Bearer {key}".format(key=self.key)},
         )

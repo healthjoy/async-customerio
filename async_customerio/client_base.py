@@ -4,11 +4,12 @@ Implements the base client that is used by other classes to make requests
 import logging
 import typing as t
 import uuid
+from datetime import datetime
+from importlib.metadata import version
 from typing import Optional
 
 import httpx
 
-import pkg_resources
 from async_customerio.errors import AsyncCustomerIOError
 from async_customerio.utils import sanitize
 
@@ -35,7 +36,8 @@ class AsyncClientBase:
         return {
             "Content-Type": "application/json",
             "X-Request-Id": self._get_request_id(),
-            "User-Agent": "async-customerio/{0}".format(pkg_resources.get_distribution("async-customerio").version),
+            "X-Timestamp": datetime.utcnow().isoformat(),
+            "User-Agent": "async-customerio/{0}".format(version("async-customerio")),
         }
 
     async def send_request(

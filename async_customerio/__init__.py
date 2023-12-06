@@ -1,6 +1,6 @@
 import logging
 
-from async_customerio.api import AsyncAPIClient, SendEmailRequest  # noqa
+from async_customerio.api import AsyncAPIClient, SendEmailRequest, SendPushRequest  # noqa
 from async_customerio.errors import AsyncCustomerIOError  # noqa
 from async_customerio.regions import Regions  # noqa
 from async_customerio.request_validator import validate_signature  # noqa
