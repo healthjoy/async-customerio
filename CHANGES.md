@@ -1,8 +1,8 @@
 # Changelog
 
 ## 1.3.0
-- Support of Python 3.12 added.
-- [FIX] Add missing dependency ``type_extensions`` to be able using type annotations on Python 3.7
+  - Support of Python 3.12 added.
+  - [FIX] Add missing dependency ``type_extensions`` to be able using type annotations on Python 3.7
 
 ## 1.2.0
 - Added support of sending transactional push notifications. More details of how to send Push Notifications via CustomerIO https://customer.io/docs/journeys/transactional-api/#transactional-push-notifications
