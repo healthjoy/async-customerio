@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.0
+- Support of Python 3.12 added.
+
 ## 1.2.0
 - Added support of sending transactional push notifications. More details of how to send Push Notifications via CustomerIO https://customer.io/docs/journeys/transactional-api/#transactional-push-notifications
 
