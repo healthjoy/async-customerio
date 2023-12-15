@@ -36,3 +36,12 @@ repos:
         args: [--no-error-summary, --hide-error-codes, --follow-imports=skip]
         files: ^async_customerio/
         additional_dependencies: [types-setuptools]
+
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 0.7.17
+    hooks:
+      - id: mdformat
+        # Optionally add plugins
+        additional_dependencies:
+          - mdformat-gfm
+          - mdformat-black

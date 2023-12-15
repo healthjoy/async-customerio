@@ -4,9 +4,9 @@
 
 As of December 7, 2022:
 
-| Version | Supported          |
-| ------- | ------------------ |
-| < 1.0   | :white_check_mark: Current Stable, Actively developing |
+| Version | Supported                                              |
+| ------- | ------------------------------------------------------ |
+| \< 1.0  | :white_check_mark: Current Stable, Actively developing |
 
 ## Reporting a Vulnerability
 
