@@ -20,7 +20,7 @@
 ## Installation
 
 ```shell script
-$ pip install async-customerio
+pip install async-customerio
 ```
 
 ## Getting started
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-#### Instantiating `AsyncCustomerIO` object
+### Instantiating `AsyncCustomerIO` object
 
 Create an instance of the client with your [Customer.io credentials](https://fly.customer.io/settings/api_credentials).
 
