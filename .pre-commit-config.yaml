@@ -36,9 +36,3 @@ repos:
         args: [--no-error-summary, --hide-error-codes, --follow-imports=skip]
         files: ^async_customerio/
         additional_dependencies: [types-setuptools]
-
-  - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.38.0
-    hooks:
-      - id: markdownlint
-        args: [--fix, --disable=MD013, --disable=MD041]
