@@ -2,9 +2,12 @@
 Implements the client that interacts with Customer.io"s App API using app keys.
 """
 import base64
-from typing import Dict, Literal, Optional, Union
 
-from typing_extensions import TypedDict
+
+try:
+    from typing import Dict, Literal, Optional, TypedDict, Union
+except ImportError:
+    from typing_extensions import Dict, Literal, Optional, TypedDict, Union  # type: ignore
 
 from async_customerio.client_base import AsyncClientBase
 from async_customerio.errors import AsyncCustomerIOError
