@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.4.1
+* [FIX] Authentication data is not sent with request.
+
 ## 1.4.0
 * Refactored  ``async_customerio.client_base.AsyncClientBase`` to take advantage of connection pool. So the HTTP client will be created once during class ``async_customerio.track.AsyncCustomerIO`` and ``async_customerio.api.AsyncAPIClient`` instantiation.
 

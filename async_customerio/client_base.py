@@ -100,7 +100,7 @@ class AsyncClientBase:
         )
         try:
             raw_cio_response: httpx.Response = await self._client.request(
-                method, url, json=json_payload and sanitize(json_payload), headers=merged_headers
+                method, url, json=json_payload and sanitize(json_payload), headers=merged_headers, auth=auth
             )
             result_status = raw_cio_response.status_code
             if result_status != 200:
