@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Optional
 from urllib.parse import quote
 
+from async_customerio._config import DEFAULT_REQUEST_TIMEOUT, RequestTimeout
 from async_customerio.client_base import AsyncClientBase
 from async_customerio.constants import CIOID, EMAIL, ID
 from async_customerio.errors import AsyncCustomerIOError
@@ -38,7 +39,7 @@ class AsyncCustomerIO(AsyncClientBase):
         port: Optional[int] = None,
         url_prefix: Optional[str] = None,
         retries: int = 3,
-        timeout: int = 10,
+        request_timeout: RequestTimeout = DEFAULT_REQUEST_TIMEOUT,
     ):
         if not isinstance(region, Region):
             raise AsyncCustomerIOError("invalid region provided")
@@ -49,7 +50,7 @@ class AsyncCustomerIO(AsyncClientBase):
         self.base_url = self.setup_base_url(
             host=host or self.DEFAULT_API_HOST, port=port or self.DEFAULT_API_PORT, prefix=url_prefix or self.API_PREFIX
         )
-        super().__init__(retries=retries, timeout=timeout)
+        super().__init__(retries=retries, request_timeout=request_timeout)
 
     @staticmethod
     def _url_encode(id_: t.Union[str, int]) -> str:
