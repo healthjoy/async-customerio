@@ -2,7 +2,7 @@ import typing as t
 from dataclasses import dataclass
 
 
-@dataclass()
+@dataclass
 class RequestTimeout:
     """
     Request timeout configuration.
@@ -18,7 +18,7 @@ class RequestTimeout:
     timeout: t.Optional[float] = None
 
 
-@dataclass()
+@dataclass
 class RequestLimits:
     """
     Configuration for request limits.
