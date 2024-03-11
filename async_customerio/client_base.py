@@ -10,6 +10,7 @@ from typing import Optional
 
 import httpx
 
+from async_customerio._config import DEFAULT_REQUEST_LIMITS, DEFAULT_REQUEST_TIMEOUT, RequestLimits, RequestTimeout
 from async_customerio.errors import AsyncCustomerIOError
 from async_customerio.utils import sanitize
 
@@ -21,9 +22,35 @@ Last caught exception -- {klass}: {message}
 
 
 class AsyncClientBase:
-    def __init__(self, retries: int = 3, timeout: int = 10):
-        self.timeout = timeout
-        self.retries = retries
+    def __init__(
+        self,
+        retries: int = 3,
+        *,
+        request_timeout: RequestTimeout = DEFAULT_REQUEST_TIMEOUT,
+        request_limits: RequestLimits = DEFAULT_REQUEST_LIMITS,
+    ):
+        """
+
+        :param retries: set number of retries before give up
+        :param request_timeout: advanced feature that allows to change request timeout.
+        :param request_limits: advanced feature that allows to control the connection pool size.
+        """
+
+        self._retries = retries
+        self._request_timeout = request_timeout
+        self._request_transport = httpx.AsyncHTTPTransport(
+            limits=httpx.Limits(**request_limits.__dict__), retries=retries
+        )
+        self._http_client: t.Optional[httpx.AsyncClient] = None
+
+    @property
+    def _client(self) -> httpx.AsyncClient:
+        if self._http_client is None or self._http_client.is_closed:
+            self._http_client = httpx.AsyncClient(
+                timeout=httpx.Timeout(**self._request_timeout.__dict__),
+                transport=self._request_transport,
+            )
+        return self._http_client
 
     @staticmethod
     def _get_request_id():
@@ -64,29 +91,27 @@ class AsyncClientBase:
         if headers:
             merged_headers.update(headers)
 
-        transport = httpx.AsyncHTTPTransport(retries=self.retries)
-        async with httpx.AsyncClient(timeout=self.timeout, transport=transport, auth=auth) as client:
-            logging.debug(
-                "Requesting method: %s, URL: %s, payload: %s, headers: %s",
-                method,
-                url,
-                json_payload,
-                headers,
+        logging.debug(
+            "Requesting method: %s, URL: %s, payload: %s, headers: %s",
+            method,
+            url,
+            json_payload,
+            headers,
+        )
+        try:
+            raw_cio_response: httpx.Response = await self._client.request(
+                method, url, json=json_payload and sanitize(json_payload), headers=merged_headers
             )
-            try:
-                raw_cio_response: httpx.Response = await client.request(
-                    method, url, json=json_payload and sanitize(json_payload), headers=merged_headers
-                )
-                result_status = raw_cio_response.status_code
-                if result_status != 200:
-                    raise AsyncCustomerIOError(f"{result_status}: {url} {json_payload} {raw_cio_response.text}")
-            except Exception as err:
-                # Raise exception alerting user that the system might be
-                # experiencing an outage and refer them to system status page.
-                raise AsyncCustomerIOError(
-                    CUSTOMERIO_UNAVAILABLE_MESSAGE.format(klass=type(err), message=err, count=self.retries)
-                )
-
+            result_status = raw_cio_response.status_code
+            if result_status != 200:
+                raise AsyncCustomerIOError(f"{result_status}: {url} {json_payload} {raw_cio_response.text}")
+        except Exception as err:
+            # Raise exception alerting user that the system might be
+            # experiencing an outage and refer them to system status page.
+            raise AsyncCustomerIOError(
+                CUSTOMERIO_UNAVAILABLE_MESSAGE.format(klass=type(err), message=err, count=self._retries)
+            )
+        else:
             logging.debug(
                 "Response Code: %s, Time spent to make a request: %s",
                 raw_cio_response.status_code,

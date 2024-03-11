@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.0
+* Refactored  ``async_customerio.client_base.AsyncClientBase`` to take advantage of connection pool. So the HTTP client will be created once during class ``async_customerio.track.AsyncCustomerIO`` and ``async_customerio.api.AsyncAPIClient`` instantiation.
+
+
 ## 1.3.0
 
 - Support of Python 3.12 added.

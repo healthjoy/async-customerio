@@ -3,6 +3,8 @@ Implements the client that interacts with Customer.io"s App API using app keys.
 """
 import base64
 
+from async_customerio._config import DEFAULT_REQUEST_TIMEOUT, RequestTimeout
+
 
 try:
     from typing import Dict, Literal, Optional, TypedDict, Union
@@ -210,14 +212,19 @@ class AsyncAPIClient(AsyncClientBase):
     SEND_PUSH_NOTIFICATION_ENDPOINT = "/send/push"
 
     def __init__(
-        self, key: str, url: Optional[str] = None, region: Region = Regions.US, retries: int = 3, timeout: int = 10
+        self,
+        key: str,
+        url: Optional[str] = None,
+        region: Region = Regions.US,
+        retries: int = 3,
+        request_timeout: RequestTimeout = DEFAULT_REQUEST_TIMEOUT,
     ):
         if not isinstance(region, Region):
             raise AsyncCustomerIOError("invalid region provided")
 
         self.key = key
         self.base_url = url or "https://{host}".format(host=region.api_host)
-        super().__init__(retries=retries, timeout=timeout)
+        super().__init__(retries=retries, request_timeout=request_timeout)
 
     async def send_email(self, request: SendEmailRequest) -> dict:
         if not isinstance(request, SendEmailRequest):
