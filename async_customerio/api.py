@@ -1,6 +1,7 @@
 """
 Implements the client that interacts with Customer.io"s App API using app keys.
 """
+
 import base64
 
 from async_customerio._config import DEFAULT_REQUEST_TIMEOUT, RequestTimeout
@@ -22,7 +23,12 @@ IdentifierEMAIL = TypedDict("IdentifierEMAIL", {"email": str})
 IdentifierCIOID = TypedDict("IdentifierCIOID", {"cio_id": Union[str, int]})
 CustomDevice = TypedDict(
     "CustomDevice",
-    {"token": str, "platform": Literal["ios", "android"], "last_used": Optional[int], "attributes": dict},
+    {
+        "token": str,
+        "platform": Literal["ios", "android"],
+        "last_used": Optional[int],
+        "attributes": dict,
+    },
 )
 
 

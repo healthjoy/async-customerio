@@ -7,3 +7,7 @@ class BaseAsyncCustomerIOError(Exception):
 
 class AsyncCustomerIOError(BaseAsyncCustomerIOError):
     pass
+
+
+class AsyncCustomerIORetryableError(BaseAsyncCustomerIOError):
+    pass

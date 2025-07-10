@@ -24,7 +24,7 @@ env:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   create-virtualenv:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -61,7 +61,7 @@ jobs:
 
   linters-black:
     needs: create-virtualenv
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: source code
         uses: actions/checkout@v3
@@ -94,7 +94,7 @@ jobs:
 
   linters-mypy:
     needs: create-virtualenv
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: source code
         uses: actions/checkout@v3
@@ -129,7 +129,7 @@ jobs:
 
   test:
     needs: [ linters-black, linters-mypy ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         python-version: [ '3.7', '3.8', '3.9', '3.10', '3.11', '3.12' ]

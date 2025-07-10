@@ -4,7 +4,13 @@ import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from async_customerio import AsyncAPIClient, AsyncCustomerIOError, SendEmailRequest, SendPushRequest
+from async_customerio import (
+    AsyncAPIClient,
+    AsyncCustomerIOError,
+    AsyncCustomerIORetryableError,
+    SendEmailRequest,
+    SendPushRequest,
+)
 
 pytestmark = pytest.mark.asyncio
 
@@ -67,7 +73,23 @@ async def test_unauthorized_request(fake_async_api_client, httpx_mock: HTTPXMock
 @pytest.mark.parametrize("connection_error", (httpx.ConnectError, httpx.ConnectTimeout))
 async def test_client_connection_handling(connection_error, fake_async_api_client, httpx_mock: HTTPXMock):
     httpx_mock.add_exception(connection_error("something went wrong"))
-    with pytest.raises(AsyncCustomerIOError):
+    with pytest.raises(AsyncCustomerIORetryableError):
+        await fake_async_api_client.send_email(
+            SendEmailRequest(to="johnsmith@doh.com", _from="johndoh@smith.com", body="Hi there!")
+        )
+
+
+async def test_read_error_handling(fake_async_api_client, httpx_mock: HTTPXMock):
+    httpx_mock.add_exception(httpx.ReadError("failed to read response"))
+    with pytest.raises(AsyncCustomerIORetryableError):
+        await fake_async_api_client.send_email(
+            SendEmailRequest(to="johnsmith@doh.com", _from="johndoh@smith.com", body="Hi there!")
+        )
+
+
+async def test_bad_gateway_error_handling(fake_async_api_client, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=502)
+    with pytest.raises(AsyncCustomerIORetryableError):
         await fake_async_api_client.send_email(
             SendEmailRequest(to="johnsmith@doh.com", _from="johndoh@smith.com", body="Hi there!")
         )
