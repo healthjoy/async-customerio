@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.0
+* Enhanced error handling in `send_request` method to properly categorize retryable vs non-retryable HTTP errors
+* Added support for retryable status codes (500, 502, 503, 504, 429) that throw `AsyncCustomerIORetryableError`
+* Improved CI/CD pipeline compatibility with Python 3.7-3.12
+* Added conditional import for `importlib.metadata` to support Python 3.7
+
 ## 1.4.1
 * [FIX] Authentication data is not sent with request.
 
