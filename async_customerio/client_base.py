@@ -7,8 +7,13 @@ import logging
 import typing as t
 import uuid
 from datetime import datetime
-from importlib.metadata import version
 from typing import Optional
+
+
+try:
+    from importlib.metadata import version
+except ImportError:
+    from importlib_metadata import version  # type: ignore
 
 import httpx
 
