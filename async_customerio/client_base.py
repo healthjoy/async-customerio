@@ -1,6 +1,8 @@
 """
 Implements the base client that is used by other classes to make requests
 """
+
+import http
 import logging
 import typing as t
 import uuid
@@ -11,7 +13,7 @@ from typing import Optional
 import httpx
 
 from async_customerio._config import DEFAULT_REQUEST_LIMITS, DEFAULT_REQUEST_TIMEOUT, RequestLimits, RequestTimeout
-from async_customerio.errors import AsyncCustomerIOError
+from async_customerio.errors import AsyncCustomerIOError, AsyncCustomerIORetryableError
 from async_customerio.utils import sanitize
 
 
@@ -38,9 +40,7 @@ class AsyncClientBase:
 
         self._retries = retries
         self._request_timeout = request_timeout
-        self._request_transport = httpx.AsyncHTTPTransport(
-            limits=httpx.Limits(**request_limits.__dict__), retries=retries
-        )
+        self._request_transport = httpx.AsyncHTTPTransport(limits=httpx.Limits(**request_limits.__dict__))
         self._http_client: t.Optional[httpx.AsyncClient] = None
 
     @property
@@ -100,22 +100,44 @@ class AsyncClientBase:
         )
         try:
             raw_cio_response: httpx.Response = await self._client.request(
-                method, url, json=json_payload and sanitize(json_payload), headers=merged_headers, auth=auth
+                method,
+                url,
+                json=json_payload and sanitize(json_payload),
+                headers=merged_headers,
+                auth=auth,
             )
-            result_status = raw_cio_response.status_code
-            if result_status != 200:
-                raise AsyncCustomerIOError(f"{result_status}: {url} {json_payload} {raw_cio_response.text}")
+            raw_cio_response.raise_for_status()
+        except httpx.TransportError as err:
+            # Raise exception alerting user that the system might be
+            # experiencing an outage and refer them to system status page.
+            raise AsyncCustomerIORetryableError(
+                CUSTOMERIO_UNAVAILABLE_MESSAGE.format(klass=type(err), message=err, count=self._retries)
+            )
+        except httpx.HTTPStatusError as err:
+            # Check if the status code is retryable
+            if err.response.status_code in [
+                http.HTTPStatus.BAD_GATEWAY,
+                http.HTTPStatus.SERVICE_UNAVAILABLE,
+                http.HTTPStatus.GATEWAY_TIMEOUT,
+                http.HTTPStatus.TOO_MANY_REQUESTS,
+            ]:
+                raise AsyncCustomerIORetryableError(
+                    CUSTOMERIO_UNAVAILABLE_MESSAGE.format(klass=type(err), message=err, count=self._retries)
+                )
+            else:
+                # For non-retryable status codes, raise the base error
+                raise AsyncCustomerIOError(f"HTTP {err.response.status_code}: {err.response.text}")
         except Exception as err:
             # Raise exception alerting user that the system might be
             # experiencing an outage and refer them to system status page.
             raise AsyncCustomerIOError(
                 CUSTOMERIO_UNAVAILABLE_MESSAGE.format(klass=type(err), message=err, count=self._retries)
             )
-        else:
-            logging.debug(
-                "Response Code: %s, Time spent to make a request: %s",
-                raw_cio_response.status_code,
-                raw_cio_response.elapsed,
-            )
+
+        logging.debug(
+            "Response Code: %s, Time spent to make a request: %s",
+            raw_cio_response.status_code,
+            raw_cio_response.elapsed,
+        )
 
         return raw_cio_response.json()

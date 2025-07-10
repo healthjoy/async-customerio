@@ -4,7 +4,7 @@ import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from async_customerio import AsyncCustomerIO, AsyncCustomerIOError
+from async_customerio import AsyncCustomerIO, AsyncCustomerIOError, AsyncCustomerIORetryableError
 from async_customerio.constants import CIOID, EMAIL, ID
 
 pytestmark = pytest.mark.asyncio
@@ -219,5 +219,5 @@ async def test_unauthorized_request(method, method_arguments, fake_async_custome
 @pytest.mark.parametrize("connection_error", (httpx.ConnectError, httpx.ConnectTimeout))
 async def test_client_connection_handling(connection_error, fake_async_customerio, faker_, httpx_mock: HTTPXMock):
     httpx_mock.add_exception(connection_error("something went wrong"))
-    with pytest.raises(AsyncCustomerIOError):
+    with pytest.raises(AsyncCustomerIORetryableError):
         await fake_async_customerio.identify(faker_.pyint(min_value=100))

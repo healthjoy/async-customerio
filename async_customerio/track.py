@@ -1,6 +1,7 @@
 """
 Implements the async client that interacts with Customer.io's Track API using Site ID and API Keys.
 """
+
 import typing as t
 from datetime import datetime
 from typing import Optional
@@ -48,7 +49,9 @@ class AsyncCustomerIO(AsyncClientBase):
         self.site_id: str = site_id
 
         self.base_url = self.setup_base_url(
-            host=host or self.DEFAULT_API_HOST, port=port or self.DEFAULT_API_PORT, prefix=url_prefix or self.API_PREFIX
+            host=host or self.DEFAULT_API_HOST,
+            port=port or self.DEFAULT_API_PORT,
+            prefix=url_prefix or self.API_PREFIX,
         )
         super().__init__(retries=retries, request_timeout=request_timeout)
 
@@ -82,7 +85,9 @@ class AsyncCustomerIO(AsyncClientBase):
         if not identifier:
             raise AsyncCustomerIOError("identifier cannot be blank in identify")
         await self.send_request(
-            "PUT", join_url(self.base_url, self.CUSTOMER_ENDPOINT.format(id=identifier)), json_payload=attrs
+            "PUT",
+            join_url(self.base_url, self.CUSTOMER_ENDPOINT.format(id=identifier)),
+            json_payload=attrs,
         )
 
     async def track(self, customer_id: t.Union[str, int], name: str, **data) -> None:
@@ -99,7 +104,9 @@ class AsyncCustomerIO(AsyncClientBase):
 
         post_data = {"name": name, "data": sanitize(data)}
         await self.send_request(
-            "POST", join_url(self.base_url, self.CUSTOMER_EVENT_ENDPOINT.format(id=customer_id)), json_payload=post_data
+            "POST",
+            join_url(self.base_url, self.CUSTOMER_EVENT_ENDPOINT.format(id=customer_id)),
+            json_payload=post_data,
         )
 
     async def track_anonymous(self, anonymous_id: str, name: str, **data) -> None:
@@ -114,7 +121,11 @@ class AsyncCustomerIO(AsyncClientBase):
         if anonymous_id:
             post_data["anonymous_id"] = anonymous_id
 
-        await self.send_request("POST", join_url(self.base_url, self.EVENTS_ENDPOINT), json_payload=post_data)
+        await self.send_request(
+            "POST",
+            join_url(self.base_url, self.EVENTS_ENDPOINT),
+            json_payload=post_data,
+        )
 
     async def pageview(self, customer_id: t.Union[str, int], page: str, **data) -> None:
         """Track a pageview for a given customer_id."""
@@ -123,11 +134,17 @@ class AsyncCustomerIO(AsyncClientBase):
 
         post_data = {"type": "page", "name": page, "data": sanitize(data)}
         await self.send_request(
-            "POST", join_url(self.base_url, self.CUSTOMER_EVENT_ENDPOINT.format(id=customer_id)), json_payload=post_data
+            "POST",
+            join_url(self.base_url, self.CUSTOMER_EVENT_ENDPOINT.format(id=customer_id)),
+            json_payload=post_data,
         )
 
     async def backfill(
-        self, customer_id: t.Union[str, int], name: str, timestamp: t.Union[datetime, int], **data
+        self,
+        customer_id: t.Union[str, int],
+        name: str,
+        timestamp: t.Union[datetime, int],
+        **data,
     ) -> None:
         """Backfill an event (track with timestamp) for a given customer_id."""
         if not customer_id:
@@ -141,7 +158,9 @@ class AsyncCustomerIO(AsyncClientBase):
         post_data = {"name": name, "data": sanitize(data), "timestamp": timestamp}
 
         await self.send_request(
-            "POST", join_url(self.base_url, self.CUSTOMER_EVENT_ENDPOINT.format(id=customer_id)), json_payload=post_data
+            "POST",
+            join_url(self.base_url, self.CUSTOMER_EVENT_ENDPOINT.format(id=customer_id)),
+            json_payload=post_data,
         )
 
     async def delete(self, customer_id: t.Union[str, int]) -> None:
@@ -156,7 +175,10 @@ class AsyncCustomerIO(AsyncClientBase):
         if not customer_id:
             raise AsyncCustomerIOError("customer_id cannot be blank in delete")
 
-        await self.send_request("DELETE", join_url(self.base_url, self.CUSTOMER_ENDPOINT.format(id=customer_id)))
+        await self.send_request(
+            "DELETE",
+            join_url(self.base_url, self.CUSTOMER_ENDPOINT.format(id=customer_id)),
+        )
 
     async def add_device(self, customer_id: t.Union[str, int], device_id: str, platform: str, **data) -> None:
         """
@@ -181,7 +203,9 @@ class AsyncCustomerIO(AsyncClientBase):
         data.update({"id": device_id, "platform": platform})
         payload = {"device": data}
         await self.send_request(
-            "PUT", join_url(self.base_url, self.CUSTOMER_DEVICE_ENDPOINT).format(id=customer_id), json_payload=payload
+            "PUT",
+            join_url(self.base_url, self.CUSTOMER_DEVICE_ENDPOINT).format(id=customer_id),
+            json_payload=payload,
         )
 
     async def delete_device(self, customer_id: t.Union[str, int], device_id: str) -> None:
@@ -202,7 +226,11 @@ class AsyncCustomerIO(AsyncClientBase):
 
         await self.send_request(
             "DELETE",
-            join_url(self.base_url, self.CUSTOMER_DEVICE_ENDPOINT.format(id=customer_id), self._url_encode(device_id)),
+            join_url(
+                self.base_url,
+                self.CUSTOMER_DEVICE_ENDPOINT.format(id=customer_id),
+                self._url_encode(device_id),
+            ),
         )
 
     async def suppress(self, customer_id: t.Union[str, int]) -> None:
@@ -217,7 +245,10 @@ class AsyncCustomerIO(AsyncClientBase):
         if not customer_id:
             raise AsyncCustomerIOError("customer_id cannot be blank in suppress")
 
-        await self.send_request("POST", join_url(self.base_url, self.CUSTOMER_SUPPRESS_ENDPOINT.format(id=customer_id)))
+        await self.send_request(
+            "POST",
+            join_url(self.base_url, self.CUSTOMER_SUPPRESS_ENDPOINT.format(id=customer_id)),
+        )
 
     async def unsuppress(self, customer_id: t.Union[str, int]) -> None:
         """
@@ -235,7 +266,8 @@ class AsyncCustomerIO(AsyncClientBase):
             raise AsyncCustomerIOError("customer_id cannot be blank in unsuppress")
 
         await self.send_request(
-            "POST", join_url(self.base_url, self.CUSTOMER_UNSUPRESS_ENDPOINT.format(id=customer_id))
+            "POST",
+            join_url(self.base_url, self.CUSTOMER_UNSUPRESS_ENDPOINT.format(id=customer_id)),
         )
 
     async def merge_customers(
@@ -267,8 +299,15 @@ class AsyncCustomerIO(AsyncClientBase):
         if not secondary_id:
             raise AsyncCustomerIOError("secondary customer_id cannot be blank")
 
-        post_data = {"primary": {primary_id_type: primary_id}, "secondary": {secondary_id_type: secondary_id}}
-        await self.send_request("POST", join_url(self.base_url, self.MERGE_CUSTOMERS_ENDPOINT), json_payload=post_data)
+        post_data = {
+            "primary": {primary_id_type: primary_id},
+            "secondary": {secondary_id_type: secondary_id},
+        }
+        await self.send_request(
+            "POST",
+            join_url(self.base_url, self.MERGE_CUSTOMERS_ENDPOINT),
+            json_payload=post_data,
+        )
 
     async def send_request(
         self,
@@ -277,8 +316,12 @@ class AsyncCustomerIO(AsyncClientBase):
         *,
         json_payload: Optional[t.Dict[str, t.Any]] = None,
         headers: Optional[t.Dict[str, str]] = None,
-        auth: t.Optional[t.Tuple[str, str]] = None
+        auth: t.Optional[t.Tuple[str, str]] = None,
     ) -> t.Union[dict]:
         return await super().send_request(
-            method, url, json_payload=json_payload, headers=headers, auth=(self.site_id, self.api_key)
+            method,
+            url,
+            json_payload=json_payload,
+            headers=headers,
+            auth=(self.site_id, self.api_key),
         )
