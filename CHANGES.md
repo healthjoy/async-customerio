@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.6.0
+* Support of Python 3.13 added
+
 ## 1.5.0
 * Enhanced error handling in `send_request` method to properly categorize retryable vs non-retryable HTTP errors
 * Added support for retryable status codes (500, 502, 503, 504, 429) that throw `AsyncCustomerIORetryableError`
