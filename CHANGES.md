@@ -1,20 +1,31 @@
 # Changelog
 
+## 2.1.0
+
+- Add support for sending transactional SMS messages.
+
+## 2.0.0
+
+- [BREAKING] Drop support of Python 3.7 and Python 3.8
+
 ## 1.6.0
-* Support of Python 3.13 added
+
+- Support of Python 3.13 added
 
 ## 1.5.0
-* Enhanced error handling in `send_request` method to properly categorize retryable vs non-retryable HTTP errors
-* Added support for retryable status codes (500, 502, 503, 504, 429) that throw `AsyncCustomerIORetryableError`
-* Improved CI/CD pipeline compatibility with Python 3.7-3.12
-* Added conditional import for `importlib.metadata` to support Python 3.7
+
+- Enhanced error handling in `send_request` method to properly categorize retryable vs non-retryable HTTP errors
+- Added support for retryable status codes (500, 502, 503, 504, 429) that throw `AsyncCustomerIORetryableError`
+- Improved CI/CD pipeline compatibility with Python 3.7-3.12
+- Added conditional import for `importlib.metadata` to support Python 3.7
 
 ## 1.4.1
-* [FIX] Authentication data is not sent with request.
+
+- [FIX] Authentication data is not sent with request.
 
 ## 1.4.0
-* Refactored  ``async_customerio.client_base.AsyncClientBase`` to take advantage of connection pool. So the HTTP client will be created once during class ``async_customerio.track.AsyncCustomerIO`` and ``async_customerio.api.AsyncAPIClient`` instantiation.
 
+- Refactored  ``async_customerio.client_base.AsyncClientBase`` to take advantage of connection pool. So the HTTP client will be created once during class ``async_customerio.track.AsyncCustomerIO`` and ``async_customerio.api.AsyncAPIClient`` instantiation.
 
 ## 1.3.0
 
