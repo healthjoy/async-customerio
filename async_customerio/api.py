@@ -212,10 +212,84 @@ class SendPushRequest:
         return data
 
 
+class SendSMSRequest:
+    """An object with all the options available for triggering a transactional SMS message."""
+
+    def __init__(
+        self,
+        transactional_message_id: Optional[Union[str, int]] = None,
+        to: Optional[str] = None,
+        identifiers: Optional[Union[IdentifierID, IdentifierEMAIL, IdentifierCIOID]] = None,
+        _from: Optional[str] = None,
+        language: Optional[str] = None,
+        message_data: Optional[dict] = None,
+        send_at: Optional[int] = None,
+        disable_message_retention: bool = False,
+        send_to_unsubscribed: bool = True,
+        queue_draft: bool = False,
+    ) -> None:
+        """Constructor of the SMS message object that is sent along with the request.
+
+        :param transactional_message_id: The transactional message template that you want to use for your message.
+        :param identifiers: Identifies the person represented by your transactional message by one of, and only one of,
+            ``IdentifierID``, ``IdentifierEMAIL``, ``IdentifierCIOID``.
+        :param _from: The phone number or sender ID that your SMS is from. This must be a verified phone number in your
+            Twilio account. This overrides the from address set within the transactional template (referenced by
+            ``transactional_message_id``). Phone numbers must be in E.164 format (e.g., +15551234567).
+        :param language: Overrides language preferences for the person you want to send your transactional message to.
+        :param message_data: A dictionary containing the key-value pairs referenced using **liquid** in your message.
+        :param send_at: A unix timestamp (seconds since epoch) determining when the message will be sent.
+        :param disable_message_retention: If true, the message body is not retained in delivery history. Default is set
+            to ``False``.
+        :param send_to_unsubscribed: If false, your message is not sent to unsubscribed recipients. Default is set to
+            ``True``.
+        :param queue_draft: If true, your transactional message is held as a draft in Customer.io and not sent directly
+            to your audience. Default is set to ``False``.
+        """
+
+        self.transactional_message_id = transactional_message_id
+        self.to = to
+        self.identifiers = identifiers
+        self._from = _from
+        self.language = language
+        self.message_data = message_data
+        self.send_at = send_at
+        self.disable_message_retention = disable_message_retention
+        self.send_to_unsubscribed = send_to_unsubscribed
+        self.queue_draft = queue_draft
+
+    def to_dict(self):
+        """Build a request payload from the object."""
+        field_map = dict(
+            # `from` is reserved keyword hence the object has the field
+            # `_from` but in the request payload we map it to `from`
+            _from="from",
+            # field name is the same as the payload field name
+            transactional_message_id="transactional_message_id",
+            to="to",
+            identifiers="identifiers",
+            disable_message_retention="disable_message_retention",
+            send_to_unsubscribed="send_to_unsubscribed",
+            queue_draft="queue_draft",
+            message_data="message_data",
+            send_at="send_at",
+            language="language",
+        )
+
+        data = {}
+        for field, name in field_map.items():
+            value = getattr(self, field, None)
+            if value is not None:
+                data[name] = value
+
+        return data
+
+
 class AsyncAPIClient(AsyncClientBase):
     API_PREFIX = "/v1"
     SEND_EMAIL_ENDPOINT = "/send/email"
     SEND_PUSH_NOTIFICATION_ENDPOINT = "/send/push"
+    SEND_SMS_ENDPOINT = "/send/sms"
 
     def __init__(
         self,
@@ -250,6 +324,17 @@ class AsyncAPIClient(AsyncClientBase):
         return await self.send_request(
             "POST",
             join_url(self.base_url, self.API_PREFIX, self.SEND_PUSH_NOTIFICATION_ENDPOINT),
+            json_payload=request.to_dict(),
+            headers={"Authorization": "Bearer {key}".format(key=self.key)},
+        )
+
+    async def send_sms(self, request: SendSMSRequest) -> dict:
+        if not isinstance(request, SendSMSRequest):
+            raise AsyncCustomerIOError("invalid request provided")
+
+        return await self.send_request(
+            "POST",
+            join_url(self.base_url, self.API_PREFIX, self.SEND_SMS_ENDPOINT),
             json_payload=request.to_dict(),
             headers={"Authorization": "Bearer {key}".format(key=self.key)},
         )

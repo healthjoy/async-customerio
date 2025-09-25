@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.0
+* Add support for sending transactional SMS messages.
+
+## 2.0.0
+* [BREAKING] Drop support of Python 3.7 and Python 3.8
+
 ## 1.6.0
 * Support of Python 3.13 added
 
