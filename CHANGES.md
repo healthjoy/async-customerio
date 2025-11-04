@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.0
+
+- Remove redundant code that transforms the request object to a dictionary before sending it.
+
 ## 2.1.0
 
 - Add support for sending transactional SMS messages.

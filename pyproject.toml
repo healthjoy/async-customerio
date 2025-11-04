@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "async-customerio"
-version = "2.1.0"
+version = "2.2.0"
 description = "Async CustomerIO Client - a Python client to interact with CustomerIO in an async fashion."
 license = "MIT"
 authors = [
@@ -53,7 +53,7 @@ mypy = "~1.15.0"
 [tool.isort]
 atomic = true
 known_third_party = [
-    "faker", "httpx", "pytest", "pytest_httpx", "typing_extensions"
+    "faker", "httpx", "pytest", "pytest_httpx",
 ]
 sections = [
     "FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"

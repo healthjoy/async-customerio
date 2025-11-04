@@ -64,3 +64,22 @@ def join_url(
         url = urljoin(url, "?{}".format(urlencode(params)))
 
     return url
+
+
+def to_dict(field_map: t.Dict[str, str], instance: t.Any, exclude_none: bool = True) -> t.Dict[str, t.Any]:
+    """Build a request payload from the object.
+
+    :param field_map: dictionary that defines mapping.
+    :param request_instance: insatnce of request object.
+    :param exclude_none: defines whether fields with ``None`` should be included into resulting dict.
+    :return: dictionary that is a mapping of request attributes according to the field map.
+    """
+
+    data = {}
+    for field, name in field_map.items():
+        value = getattr(instance, field, None)
+        if value is None and exclude_none:
+            continue
+        data[name] = value
+
+    return data
