@@ -3,19 +3,13 @@ Implements the client that interacts with Customer.io"s App API using app keys.
 """
 
 import base64
+from typing import Dict, Literal, Optional, TypedDict, Union
 
 from async_customerio._config import DEFAULT_REQUEST_TIMEOUT, RequestTimeout
-
-
-try:
-    from typing import Dict, Literal, Optional, TypedDict, Union
-except ImportError:
-    from typing_extensions import Dict, Literal, Optional, TypedDict, Union  # type: ignore
-
 from async_customerio.client_base import AsyncClientBase
 from async_customerio.errors import AsyncCustomerIOError
 from async_customerio.regions import Region, Regions
-from async_customerio.utils import join_url
+from async_customerio.utils import join_url, to_dict
 
 
 IdentifierID = TypedDict("IdentifierID", {"id": Union[str, int]})
@@ -128,14 +122,7 @@ class SendEmailRequest:
             send_at="send_at",
             language="language",
         )
-
-        data = {}
-        for field, name in field_map.items():
-            value = getattr(self, field, None)
-            if value is not None:
-                data[name] = value
-
-        return data
+        return to_dict(field_map=field_map, instance=self)
 
 
 class SendPushRequest:
@@ -202,14 +189,7 @@ class SendPushRequest:
             device="custom_device",
             sound="sound",
         )
-
-        data = {}
-        for field, name in field_map.items():
-            value = getattr(self, field, None)
-            if value is not None:
-                data[name] = value
-
-        return data
+        return to_dict(field_map=field_map, instance=self)
 
 
 class SendSMSRequest:
@@ -275,14 +255,7 @@ class SendSMSRequest:
             send_at="send_at",
             language="language",
         )
-
-        data = {}
-        for field, name in field_map.items():
-            value = getattr(self, field, None)
-            if value is not None:
-                data[name] = value
-
-        return data
+        return to_dict(field_map=field_map, instance=self)
 
 
 class AsyncAPIClient(AsyncClientBase):
