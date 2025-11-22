@@ -7,14 +7,12 @@ from typing import Dict, Literal, Optional, TypedDict, Union
 
 from async_customerio._config import DEFAULT_REQUEST_TIMEOUT, RequestTimeout
 from async_customerio.client_base import AsyncClientBase
+from async_customerio.constants import IdentifierCIOID, IdentifierEMAIL, IdentifierID
 from async_customerio.errors import AsyncCustomerIOError
 from async_customerio.regions import Region, Regions
 from async_customerio.utils import join_url, to_dict
 
 
-IdentifierID = TypedDict("IdentifierID", {"id": Union[str, int]})
-IdentifierEMAIL = TypedDict("IdentifierEMAIL", {"email": str})
-IdentifierCIOID = TypedDict("IdentifierCIOID", {"cio_id": Union[str, int]})
 CustomDevice = TypedDict(
     "CustomDevice",
     {

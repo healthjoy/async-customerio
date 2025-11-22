@@ -5,6 +5,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from async_customerio import AsyncCustomerIO, AsyncCustomerIOError, AsyncCustomerIORetryableError
+from async_customerio.track import Actions
 from async_customerio.constants import CIOID, EMAIL, ID
 
 pytestmark = pytest.mark.asyncio
@@ -208,12 +209,17 @@ async def test_merge_customers_empty_customer_id(
         ("suppress", {"customer_id": 1}),
         ("unsuppress", {"customer_id": 1}),
         ("merge_customers", {"primary_id_type": CIOID, "primary_id": 1, "secondary_id_type": ID, "secondary_id": 9}),
+        ("send_entity", {"identifiers": {CIOID: 123}, "type": "person", "action": Actions.identify, "address": "123 Main Street, Anytown, CA 12345"}),
+        ("send_batch", [{"identifiers": {CIOID: 123}, "type": "person", "action": Actions.identify, "address": "123 Main Street, Anytown, CA 12345"}]),
     )
 )
 async def test_unauthorized_request(method, method_arguments, fake_async_customerio, httpx_mock: HTTPXMock):
     httpx_mock.add_response(status_code=401)
     with pytest.raises(AsyncCustomerIOError):
-        await getattr(fake_async_customerio, method)(**method_arguments)
+        if isinstance(method_arguments, dict):
+            await getattr(fake_async_customerio, method)(**method_arguments)
+        else:
+            await getattr(fake_async_customerio, method)(method_arguments)
 
 
 @pytest.mark.parametrize("connection_error", (httpx.ConnectError, httpx.ConnectTimeout))
@@ -221,3 +227,131 @@ async def test_client_connection_handling(connection_error, fake_async_customeri
     httpx_mock.add_exception(connection_error("something went wrong"))
     with pytest.raises(AsyncCustomerIORetryableError):
         await fake_async_customerio.identify(faker_.pyint(min_value=100))
+
+
+async def test_send_entity(fake_async_customerio, faker_, httpx_mock: HTTPXMock):
+    """Verify send_entity sends a v2 entity request and returns None (align with other tests)."""
+    httpx_mock.add_response(status_code=200, json={"success": True})
+
+    response = await fake_async_customerio.send_entity(
+        identifiers={"id": faker_.pystr()},
+        type="person",
+        action=Actions.identify,
+        name="John",
+        activated=True,
+    )
+
+    # send_entity does not return the underlying response (other track methods return None)
+    assert response is None
+
+
+async def test_send_entity_empty_identifier_raises(fake_async_customerio):
+    with pytest.raises(AsyncCustomerIOError, match="identifiers cannot be blank in send_entity"):
+        await fake_async_customerio.send_entity(
+            identifiers=None,
+            type="person",
+            action=Actions.identify,
+            name="John",
+        )
+
+async def test_send_batch_success_200(fake_async_customerio, faker_, httpx_mock: HTTPXMock):
+    """200 — entire batch accepted; method returns None (consistent with other track methods)."""
+    httpx_mock.add_response(status_code=200, json={"success": True})
+
+    payload = [
+        {
+            "type": "person",
+            "action": Actions.identify.value,
+            "identifiers": {"id": faker_.pyint(min_value=1)},
+            "attributes": {"name": "John"},
+        }
+    ]
+
+    response = await fake_async_customerio.send_batch(payload)
+    assert response is None
+
+
+async def test_send_batch_partial_207(fake_async_customerio, faker_, httpx_mock: HTTPXMock):
+    """207 — partial success (at least one invalid object); still treated as a successful request by client."""
+    httpx_mock.add_response(
+        status_code=207,
+        json={
+            "errors": [
+                {
+                    "batch_index": 1,
+                    "reason": "Invalid identifier: id cannot be null",
+                    "field": "identifiers.id",
+                    "message": "Invalid identifier: id cannot be null"
+                }
+            ]
+        }
+    )
+
+    payload = [
+        {
+            "type": "person",
+            "action": Actions.identify.value,
+            "identifiers": {"id": faker_.pyint(min_value=1)},
+            "attributes": {"name": "John"},
+        },
+        {
+            "type": "person",
+            "action": Actions.identify.value,
+            "identifiers": {"id": None},
+            "attributes": {"name": "Sarah"},
+        }
+    ]
+
+    response = await fake_async_customerio.send_batch(payload)
+    assert response is None
+
+
+async def test_send_batch_malformed_400_raises(fake_async_customerio, faker_, httpx_mock: HTTPXMock):
+    """400 — entire request malformed; client should raise AsyncCustomerIOError."""
+    httpx_mock.add_response(
+        status_code=400,
+        json={
+            "errors": [
+                {
+                    "reason": "Invalid identifier: id cannot be null",
+                    "field": "identifiers.id",
+                    "message": "Invalid identifier: id cannot be null"
+                }
+            ]
+        }
+    )
+
+    payload = [
+        {
+            "type": "person",
+            "action": Actions.identify.value,
+            "identifiers": {"id": None},
+            "attributes": {"name": "John"},
+        }
+    ]
+
+    with pytest.raises(AsyncCustomerIOError):
+        await fake_async_customerio.send_batch(payload)
+
+
+@pytest.mark.parametrize(
+    "entity_type, bad_data", (
+        ("anaconda", {"first_name": "Ana", "last_name": "Conda"}),
+        ("terminator", {"identifer": None, "email": "t1000@skynet.com"}),
+        ("person", {"anonymous_id": "1111-2", "name": "some-event"}),
+    )
+)
+async def test_send_entity_malformed_or_invalid_request(
+    entity_type,
+    bad_data,
+    fake_async_customerio,
+    httpx_mock: HTTPXMock
+):
+    httpx_mock.add_response(status_code=400)
+    with pytest.raises(AsyncCustomerIOError):
+        await fake_async_customerio.send_entity(
+            identifiers={"id": "some-id"},
+            type=entity_type,
+            action=Actions.identify,
+            **bad_data
+        )
