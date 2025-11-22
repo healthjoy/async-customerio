@@ -117,6 +117,7 @@ if __name__ == "__main__":
 ```
 
 Notes:
+
 - `send_entity` validates that `identifiers` is present and constructs a payload of the shape ``{type, action, identifiers, attributes}``.
 - `send_batch` accepts a list of entity payloads. The API enforces size limits (each item <= 32kb, whole batch < 500kb); obey those limits in production.
 - Response handling: the client treats HTTP 200 and 207 as success (methods return `None`, matching other Track methods). HTTP 400 (malformed request) will raise `AsyncCustomerIOError`.
