@@ -3,7 +3,7 @@
 ## 2.3.0
 
 - Add support for CustomerIO Track V2 API. Two new methods are introduced ``send_entity`` and ``send_batch``.
- 
+
   - ``send_entity`` - This method lets you create, update, or delete a single person or object—including managing relationships between objects and people.
   - ``send_batch`` - This method lets you batch requests for different people and objects in a single request. Each object in your array represents an individual "entity" operation—it represents a change for a person, an object, or a delivery.
 
