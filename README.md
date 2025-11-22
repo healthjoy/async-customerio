@@ -69,6 +69,7 @@ that your account is based in the US (`Regions.US`). If your account is based in
 ## Track API v2
 
 This client now includes convenience helpers for the Customer.io Track V2 API. V2 uses two endpoints:
+
 - `/api/v2/entity` — single-entity operations (identify, delete, event, relationships, devices, etc.)
 - `/api/v2/batch` — submit multiple entity operations in one request (useful for bulk uploads).
 
