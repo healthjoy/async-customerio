@@ -66,6 +66,63 @@ cio = AsyncCustomerIO(site_id, api_key, region=Regions.US)
 that your account is based in the US (`Regions.US`). If your account is based in the EU and you do not provide the correct region
 (`Regions.EU`), we'll route requests to our EU data centers accordingly, however, this may cause data to be logged in the US.
 
+## Track API v2
+
+This client now includes convenience helpers for the Customer.io Track V2 API. V2 uses two endpoints:
+
+- `/api/v2/entity` — single-entity operations (identify, delete, event, relationships, devices, etc.)
+- `/api/v2/batch` — submit multiple entity operations in one request (useful for bulk uploads).
+
+Basic usage:
+
+```python
+import asyncio
+
+from async_customerio import AsyncCustomerIO, Regions
+from async_customerio.track import Actions
+
+
+async def v2_examples():
+    cio = AsyncCustomerIO(site_id="site", api_key="key", region=Regions.US)
+
+    # Single entity operation (identify a person)
+    await cio.send_entity(
+        identifiers={"id": 123},
+        type="person",
+        action=Actions.identify,
+        name="Jane",
+        plan="premium",
+    )
+
+    # Batch of entity operations
+    batch = [
+        {
+            "type": "person",
+            "action": Actions.identify.value,
+            "identifiers": {"id": 123},
+            "attributes": {"name": "Jane"},
+        },
+        {
+            "type": "object",
+            "action": Actions.identify.value,
+            "identifiers": {"id": "account_1"},
+            "attributes": {"name": "Account A"},
+        },
+    ]
+
+    await cio.send_batch(batch)
+
+
+if __name__ == "__main__":
+    asyncio.run(v2_examples())
+```
+
+Notes:
+
+- `send_entity` validates that `identifiers` is present and constructs a payload of the shape ``{type, action, identifiers, attributes}``.
+- `send_batch` accepts a list of entity payloads. The API enforces size limits (each item <= 32kb, whole batch < 500kb); obey those limits in production.
+- Response handling: the client treats HTTP 200 and 207 as success (methods return `None`, matching other Track methods). HTTP 400 (malformed request) will raise `AsyncCustomerIOError`.
+
 ## Securely verify requests [doc](https://customer.io/docs/journeys/webhooks/#securely-verify-requests)
 
 ```python
