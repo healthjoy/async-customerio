@@ -274,7 +274,7 @@ async def test_send_batch_success_200(fake_async_customerio, faker_, httpx_mock:
 async def test_send_batch_partial_207(fake_async_customerio, faker_, httpx_mock: HTTPXMock):
     """207 — partial success (at least one invalid object); still treated as a successful request by client."""
     httpx_mock.add_response(
-        status_code=207, 
+        status_code=207,
         json={
             "errors": [
                 {
@@ -285,7 +285,7 @@ async def test_send_batch_partial_207(fake_async_customerio, faker_, httpx_mock:
                 }
             ]
         }
-        )
+    )
 
     payload = [
         {

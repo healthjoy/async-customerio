@@ -82,7 +82,6 @@ class AsyncCustomerIO(AsyncClientBase):
         host: Optional[str] = None,
         region: Region = Regions.US,
         port: Optional[int] = None,
-        url_prefix: Optional[str] = None,  # Not used, present for compatibility
         retries: int = 3,
         request_timeout: RequestTimeout = DEFAULT_REQUEST_TIMEOUT,
     ):
