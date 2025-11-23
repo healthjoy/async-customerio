@@ -355,3 +355,27 @@ async def test_send_entity_malformed_or_invalid_request(
             action=Actions.identify,
             **bad_data
         )
+
+
+def test_invalid_region_raises():
+    with pytest.raises(AsyncCustomerIOError, match="invalid region provided"):
+        AsyncCustomerIO("site", "key", region="CN")
+
+
+def test_setup_base_url_strips_scheme_and_handles_default_port():
+    url = AsyncCustomerIO.setup_base_url("https://example.com", 443, "/api/v1")
+    assert url == "https://example.com/api/v1"
+
+    url2 = AsyncCustomerIO.setup_base_url("example.com", 8080, "prefix")
+    assert url2 == "https://example.com:8080/prefix"
+
+
+def test_backfill_invalid_timestamp_raises():
+    client = AsyncCustomerIO("site", "key")
+    with pytest.raises(AsyncCustomerIOError):
+        # pass a non-int, non-datetime timestamp
+        pytest.raises(AsyncCustomerIOError)
+        # call is synchronous up to validation so no network needed
+        import asyncio
+
+        asyncio.get_event_loop().run_until_complete(client.backfill("123", "name", "not-a-timestamp"))

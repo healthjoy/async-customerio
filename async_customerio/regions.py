@@ -1,17 +1,18 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
-@dataclass
+@dataclass(frozen=True)
 class Region:
     name: str
     track_host: str
     api_host: str
 
 
-@dataclass(frozen=True)
-class DefaultRegions:
-    US: Region = field(default_factory=lambda: Region("us", "track.customer.io", "api.customer.io"))
-    EU: Region = field(default_factory=lambda: Region("eu", "track-eu.customer.io", "api-eu.customer.io"))
+class Regions:
+    """Simple container for known regions.
 
+    Access as `Regions.US` and `Regions.EU` to get a `Region` instance.
+    """
 
-Regions = DefaultRegions()
+    US = Region("us", "track.customer.io", "api.customer.io")
+    EU = Region("eu", "track-eu.customer.io", "api-eu.customer.io")

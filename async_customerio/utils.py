@@ -2,22 +2,36 @@ import math
 import typing as t
 from datetime import datetime, timezone
 from typing import Optional
-from urllib.parse import quote, urlencode, urljoin
+from urllib.parse import quote, urlencode
 
 from .errors import AsyncCustomerIOError
 
 
-def datetime_to_timestamp(dt) -> int:
+def datetime_to_timestamp(dt: datetime) -> int:
+    """Convert a timezone-naive or timezone-aware datetime to a unix timestamp (seconds).
+
+    Raises AsyncCustomerIOError if `dt` is not a datetime instance.
+    """
+    if not isinstance(dt, datetime):
+        raise AsyncCustomerIOError("datetime_to_timestamp expects a datetime instance")
     return int(dt.replace(tzinfo=timezone.utc).timestamp())
 
 
 def sanitize(data: t.Dict[str, t.Any]) -> t.Dict[str, t.Any]:
+    """Return a sanitized shallow copy of ``data`` where datetimes are converted to
+    integer timestamps and NaN floats are replaced with None.
+
+    This function does not mutate the input mapping.
+    """
+    out: t.Dict[str, t.Any] = {}
     for k, v in data.items():
         if isinstance(v, datetime):
-            data[k] = datetime_to_timestamp(v)
-        if isinstance(v, float) and math.isnan(v):
-            data[k] = None
-    return data
+            out[k] = datetime_to_timestamp(v)
+        elif isinstance(v, float) and math.isnan(v):
+            out[k] = None
+        else:
+            out[k] = v
+    return out
 
 
 def stringify_list(customer_ids: t.List[t.Union[str, int]]) -> t.List[str]:
@@ -49,19 +63,25 @@ def join_url(
 
     :return: full URL
     """
-    url = base
+    # Preserve scheme and leading // by only rstrip'ing the trailing slash
+    base = base.rstrip("/")
+
     if parts:
-        url = "/".join([base.strip("/"), quote("/".join(map(lambda x: str(x).strip("/"), parts)))])
+        # quote individual path segments to avoid accidental encoding of slashes
+        encoded_parts = [quote(str(p).strip("/"), safe="") for p in parts]
+        url = "/".join([base] + encoded_parts)
+    else:
+        url = base
 
     # trailing slash can be important
-    if trailing_slash:
+    if trailing_slash and not url.endswith("/"):
         url = f"{url}/"
     # as well as a leading slash
-    if leading_slash:
+    if leading_slash and not url.startswith("/"):
         url = f"/{url}"
 
     if params:
-        url = urljoin(url, "?{}".format(urlencode(params)))
+        url = f"{url}?{urlencode(params)}"
 
     return url
 

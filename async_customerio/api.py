@@ -3,7 +3,7 @@ Implements the client that interacts with Customer.io"s App API using app keys.
 """
 
 import base64
-from typing import Dict, Literal, Optional, TypedDict, Union
+from typing import Any, Dict, Literal, Optional, Protocol, TypedDict, Union
 
 from async_customerio._config import DEFAULT_REQUEST_TIMEOUT, RequestTimeout
 from async_customerio.client_base import AsyncClientBase
@@ -22,6 +22,10 @@ CustomDevice = TypedDict(
         "attributes": dict,
     },
 )
+
+
+class HasToDict(Protocol):
+    def to_dict(self) -> Dict[str, Any]: ...
 
 
 class SendEmailRequest:
@@ -80,8 +84,8 @@ class SendEmailRequest:
         if not self.attachments:
             self.attachments = {}
 
-        if self.attachments.get(name, None):
-            raise AsyncCustomerIOError("attachment {name} already exists".format(name=name))
+        if name in self.attachments:
+            raise AsyncCustomerIOError(f"attachment {name} already exists")
 
         if encode:
             if isinstance(content, str):
@@ -91,7 +95,7 @@ class SendEmailRequest:
 
         self.attachments[name] = content
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Build a request payload from the object"""
         field_map = dict(
             # `from` is reserved keyword hence the object has the field
@@ -165,7 +169,7 @@ class SendPushRequest:
         self.custom_payload = custom_payload
         self.sound = sound
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Build a request payload from the object."""
         field_map = dict(
             # field name is the same as the payload field name
@@ -184,7 +188,7 @@ class SendPushRequest:
             link="link",
             custom_data="custom_data",
             custom_payload="custom_payload",
-            device="custom_device",
+            custom_device="custom_device",
             sound="sound",
         )
         return to_dict(field_map=field_map, instance=self)
@@ -236,7 +240,7 @@ class SendSMSRequest:
         self.send_to_unsubscribed = send_to_unsubscribed
         self.queue_draft = queue_draft
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Build a request payload from the object."""
         field_map = dict(
             # `from` is reserved keyword hence the object has the field
@@ -278,34 +282,35 @@ class AsyncAPIClient(AsyncClientBase):
         super().__init__(retries=retries, request_timeout=request_timeout)
 
     async def send_email(self, request: SendEmailRequest) -> dict:
-        if not isinstance(request, SendEmailRequest):
+        # prefer duck-typing: require a `to_dict` method rather than strict class check
+        if not hasattr(request, "to_dict"):
             raise AsyncCustomerIOError("invalid request provided")
 
         return await self.send_request(
             "POST",
             join_url(self.base_url, self.API_PREFIX, self.SEND_EMAIL_ENDPOINT),
             json_payload=request.to_dict(),
-            headers={"Authorization": "Bearer {key}".format(key=self.key)},
+            headers={"Authorization": f"Bearer {self.key}"},
         )
 
     async def send_push(self, request: SendPushRequest) -> dict:
-        if not isinstance(request, SendPushRequest):
+        if not hasattr(request, "to_dict"):
             raise AsyncCustomerIOError("invalid request provided")
 
         return await self.send_request(
             "POST",
             join_url(self.base_url, self.API_PREFIX, self.SEND_PUSH_NOTIFICATION_ENDPOINT),
             json_payload=request.to_dict(),
-            headers={"Authorization": "Bearer {key}".format(key=self.key)},
+            headers={"Authorization": f"Bearer {self.key}"},
         )
 
     async def send_sms(self, request: SendSMSRequest) -> dict:
-        if not isinstance(request, SendSMSRequest):
+        if not hasattr(request, "to_dict"):
             raise AsyncCustomerIOError("invalid request provided")
 
         return await self.send_request(
             "POST",
             join_url(self.base_url, self.API_PREFIX, self.SEND_SMS_ENDPOINT),
             json_payload=request.to_dict(),
-            headers={"Authorization": "Bearer {key}".format(key=self.key)},
+            headers={"Authorization": f"Bearer {self.key}"},
         )

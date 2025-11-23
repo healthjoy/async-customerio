@@ -1,5 +1,33 @@
 # Changelog
 
+## 2.4.0
+
+- ``client_base.py``
+
+  - Cache package version and build User-Agent.
+  - Use timezone-aware X-Timestamp.
+  - Avoid mutating caller payloads (sanitization done locally).
+  - Add ``async close()`` and ``__aenter__/__aexit__`` for cleanup.
+
+- ``utils.py``
+
+  - ``sanitize()`` made non-mutating (returns shallow copy, converts datetimes/NaN).
+  - ``datetime_to_timestamp()`` validates input.
+  - ``join_url()`` rewritten for safer quoting/params.
+
+- ``api.py``
+
+Fixed ``SendEmailRequest.attach()`` behavior and error on duplicate attachments.
+Adjusted ``to_dict()`` mappings for request objects (fixed field mapping issues).
+Duck-typing check for request objects before sending; Authorization header use.
+
+- ``request_validator.py``. Accept optional ``v0=`` prefix in webhook signatures (HMAC compare logic).
+
+- ``regions.py``. Simplified Region/Regions representation and usage.
+
+- ``track.py``. Minor fixes: use ``sanitize()`` and ``datetime_to_timestamp()`` where appropriate; ``setup_base_url()`` improvements.
+
+
 ## 2.3.0
 
 - Add support for CustomerIO Track V2 API. Two new methods are introduced ``send_entity`` and ``send_batch``.

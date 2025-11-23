@@ -1,5 +1,7 @@
 import pytest
+
 from async_customerio import validate_signature
+
 
 BODY = (
     b'{"data":{"action_id":42,"campaign_id":23,"content":"Welcome to the club, we are with you.",'
@@ -9,6 +11,7 @@ BODY = (
 )
 X_CIO_SIGNATURE = "c097b83a7d57a0810625180a61213eab7e0389a54b33dd11c3a6f17790c8427a"
 X_CIO_TIMESTAMP = 1692633432
+
 
 @pytest.mark.parametrize("signature, body, x_cio_timestamp, expected", [
     (X_CIO_SIGNATURE, BODY, X_CIO_TIMESTAMP, True),
@@ -24,4 +27,10 @@ def test_validate_signature(signature, body, x_cio_timestamp, expected):
         request_body=body,
         signature=signature
     ) is expected
+
+
+def test_validate_signature_with_v0_prefix():
+    signing_key = '755781b5e03a973f3405a85474d5a032a60fd56fabaad66039b12eadd83955fa'
+    signature = "v0=" + X_CIO_SIGNATURE
+    assert validate_signature(signing_key=signing_key, timestamp=X_CIO_TIMESTAMP, request_body=BODY, signature=signature)
 
