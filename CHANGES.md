@@ -27,7 +27,6 @@ Duck-typing check for request objects before sending; Authorization header use.
 
 - ``track.py``. Minor fixes: use ``sanitize()`` and ``datetime_to_timestamp()`` where appropriate; ``setup_base_url()`` improvements.
 
-
 ## 2.3.0
 
 - Add support for CustomerIO Track V2 API. Two new methods are introduced ``send_entity`` and ``send_batch``.
