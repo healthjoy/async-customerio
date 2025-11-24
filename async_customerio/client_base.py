@@ -6,7 +6,7 @@ import http
 import logging
 import typing as t
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 
@@ -20,6 +20,13 @@ import httpx
 from async_customerio._config import DEFAULT_REQUEST_LIMITS, DEFAULT_REQUEST_TIMEOUT, RequestLimits, RequestTimeout
 from async_customerio.errors import AsyncCustomerIOError, AsyncCustomerIORetryableError
 from async_customerio.utils import sanitize
+
+
+# Cache package version and user agent to avoid repeated metadata lookups
+try:
+    PACKAGE_VERSION = version("async-customerio")
+except Exception:
+    PACKAGE_VERSION = "unknown"
 
 
 CUSTOMERIO_UNAVAILABLE_MESSAGE = """Failed to receive valid response after {count} retries.
@@ -57,19 +64,35 @@ class AsyncClientBase:
             )
         return self._http_client
 
+    async def close(self) -> None:
+        """Close the internal ``httpx.AsyncClient`` if it exists.
+
+        Safe to call multiple times.
+        """
+        if self._http_client is not None and not self._http_client.is_closed:
+            await self._http_client.aclose()
+        self._http_client = None
+
+    async def __aenter__(self) -> "AsyncClientBase":
+        # Ensure client is initialized lazily by returning self.
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        await self.close()
+
     @staticmethod
     def _get_request_id():
         """Generate unique request ID."""
         return str(uuid.uuid4())
 
-    def _prepare_headers(self):
+    def _prepare_headers(self) -> t.Dict[str, str]:
         """Prepare HTTP headers that will be used to request CustomerIO."""
         logging.debug("Preparing HTTP headers for all the subsequent requests")
         return {
             "Content-Type": "application/json",
             "X-Request-Id": self._get_request_id(),
-            "X-Timestamp": datetime.utcnow().isoformat(),
-            "User-Agent": "async-customerio/{0}".format(version("async-customerio")),
+            "X-Timestamp": datetime.now(timezone.utc).isoformat(),
+            "User-Agent": "async-customerio/{0}".format(PACKAGE_VERSION),
         }
 
     async def send_request(
@@ -117,7 +140,7 @@ class AsyncClientBase:
             # experiencing an outage and refer them to system status page.
             raise AsyncCustomerIORetryableError(
                 CUSTOMERIO_UNAVAILABLE_MESSAGE.format(klass=type(err), message=err, count=self._retries)
-            )
+            ) from err
         except httpx.HTTPStatusError as err:
             # Check if the status code is retryable
             if err.response.status_code in [
@@ -128,16 +151,16 @@ class AsyncClientBase:
             ]:
                 raise AsyncCustomerIORetryableError(
                     CUSTOMERIO_UNAVAILABLE_MESSAGE.format(klass=type(err), message=err, count=self._retries)
-                )
+                ) from err
             else:
                 # For non-retryable status codes, raise the base error
-                raise AsyncCustomerIOError(f"HTTP {err.response.status_code}: {err.response.text}")
+                raise AsyncCustomerIOError(f"HTTP {err.response.status_code}: {err.response.text}") from err
         except Exception as err:
             # Raise exception alerting user that the system might be
             # experiencing an outage and refer them to system status page.
             raise AsyncCustomerIOError(
                 CUSTOMERIO_UNAVAILABLE_MESSAGE.format(klass=type(err), message=err, count=self._retries)
-            )
+            ) from err
 
         logging.debug(
             "Response Code: %s, Time spent to make a request: %s",
@@ -145,4 +168,11 @@ class AsyncClientBase:
             raw_cio_response.elapsed,
         )
 
-        return raw_cio_response.json()
+        # Try to parse JSON, but fall back to text for non-JSON responses.
+        try:
+            return raw_cio_response.json()
+        except ValueError:
+            # 204 No Content -> return empty dict for callers expecting a mapping
+            if raw_cio_response.status_code == http.HTTPStatus.NO_CONTENT or not raw_cio_response.text:
+                return {}
+            return raw_cio_response.text

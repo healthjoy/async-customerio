@@ -87,6 +87,14 @@ def test_sanitize(data, exp_result):
     assert result == exp_result
 
 
+def test_sanitize_does_not_mutate():
+    data = {"dt_attr": datetime(2022, 12, 31, 23, 59, 59), "float_nan": float("NaN")}
+    original = dict(data)
+    _ = sanitize(data)
+    # original mapping must remain unchanged
+    assert data == original
+
+
 @pytest.mark.parametrize(
     "customer_ids, exp_result", (
         (["1", "2", "3"], ["1", "2", "3"]),
