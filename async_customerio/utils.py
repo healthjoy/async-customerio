@@ -65,10 +65,9 @@ def join_url(
     """
     # Preserve scheme and leading // by only rstrip'ing the trailing slash
     base = base.rstrip("/")
-
     if parts:
         # quote individual path segments to avoid accidental encoding of slashes
-        encoded_parts = [quote(str(p).strip("/"), safe="") for p in parts]
+        encoded_parts = [quote(str(p).strip("/")) for p in parts]
         url = "/".join([base] + encoded_parts)
     else:
         url = base

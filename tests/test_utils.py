@@ -63,6 +63,14 @@ def test_datetime_to_timestamp(dt, exp_result):
             False,
             "/base_path/path_1?q=test",
         ),
+        (
+            "https://customer.io/api",
+            ["/v1/", "/send/email"],
+            {},
+            False,
+            False,
+            "https://customer.io/api/v1/send/email",
+        )
     ),
 )
 def test_join_url_common_flows(base, parts, params, leading_slash, trailing_slash, exp_result):
