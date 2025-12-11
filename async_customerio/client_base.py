@@ -168,4 +168,11 @@ class AsyncClientBase:
             raw_cio_response.elapsed,
         )
 
-        return raw_cio_response.json()
+        # Try to parse JSON, but fall back to text for non-JSON responses.
+        try:
+            return raw_cio_response.json()
+        except ValueError:
+            # 204 No Content -> return empty dict for callers expecting a mapping
+            if raw_cio_response.status_code == http.HTTPStatus.NO_CONTENT or not raw_cio_response.text:
+                return {}
+            return raw_cio_response.text
