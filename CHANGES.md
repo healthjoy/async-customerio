@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.4.1
+
+- Fixed a bug in URL encoding that caused a malformed request.
+
 ## 2.4.0
 
 - ``client_base.py``
