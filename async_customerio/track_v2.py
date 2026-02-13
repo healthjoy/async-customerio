@@ -98,7 +98,7 @@ class TrackAPIV2:
             prefix=self._client.API_V2_PREFIX,
         )
 
-    async def _send_entity(self, payload: t.Dict[str, t.Any]) -> None:
+    async def send_entity(self, payload: t.Dict[str, t.Any]) -> None:
         """POST a fully-formed payload to ``/api/v2/entity``."""
         await self._client.send_request(
             "POST",
@@ -145,7 +145,7 @@ class TrackAPIV2:
         if not identifiers:
             raise AsyncCustomerIOError("identifiers cannot be blank in identify_person")
 
-        await self._send_entity(
+        await self.send_entity(
             {
                 "type": "person",
                 "action": Actions.identify.value,
@@ -162,7 +162,7 @@ class TrackAPIV2:
         if not identifiers:
             raise AsyncCustomerIOError("identifiers cannot be blank in delete_person")
 
-        await self._send_entity(
+        await self.send_entity(
             {
                 "type": "person",
                 "action": Actions.delete.value,
@@ -187,7 +187,7 @@ class TrackAPIV2:
         if not name:
             raise AsyncCustomerIOError("name cannot be blank in track_person_event")
 
-        await self._send_entity(
+        await self.send_entity(
             {
                 "type": "person",
                 "action": Actions.event.value,
@@ -214,7 +214,7 @@ class TrackAPIV2:
         if not name:
             raise AsyncCustomerIOError("name cannot be blank in person_pageview")
 
-        await self._send_entity(
+        await self.send_entity(
             {
                 "type": "person",
                 "action": Actions.page.value,
@@ -241,7 +241,7 @@ class TrackAPIV2:
         if not name:
             raise AsyncCustomerIOError("name cannot be blank in person_screen")
 
-        await self._send_entity(
+        await self.send_entity(
             {
                 "type": "person",
                 "action": Actions.screen.value,
@@ -274,7 +274,7 @@ class TrackAPIV2:
 
         device_data: t.Dict[str, t.Any] = {"id": device_id, "platform": platform}
         device_data.update(device_attrs)
-        await self._send_entity(
+        await self.send_entity(
             {
                 "type": "person",
                 "action": Actions.add_device.value,
@@ -298,7 +298,7 @@ class TrackAPIV2:
         if not device_id:
             raise AsyncCustomerIOError("device_id cannot be blank in delete_person_device")
 
-        await self._send_entity(
+        await self.send_entity(
             {
                 "type": "person",
                 "action": Actions.delete_device.value,
@@ -317,7 +317,7 @@ class TrackAPIV2:
         if not identifiers:
             raise AsyncCustomerIOError("identifiers cannot be blank in suppress_person")
 
-        await self._send_entity(
+        await self.send_entity(
             {
                 "type": "person",
                 "action": Actions.suppress.value,
@@ -335,7 +335,7 @@ class TrackAPIV2:
         if not identifiers:
             raise AsyncCustomerIOError("identifiers cannot be blank in unsuppress_person")
 
-        await self._send_entity(
+        await self.send_entity(
             {
                 "type": "person",
                 "action": Actions.unsuppress.value,
@@ -361,7 +361,7 @@ class TrackAPIV2:
         if not secondary:
             raise AsyncCustomerIOError("secondary identifiers cannot be blank in merge_persons")
 
-        await self._send_entity(
+        await self.send_entity(
             {
                 "type": "person",
                 "action": Actions.merge.value,
@@ -393,7 +393,7 @@ class TrackAPIV2:
         if not relationships:
             raise AsyncCustomerIOError("relationships cannot be blank in add_person_relationships")
 
-        await self._send_entity(
+        await self.send_entity(
             {
                 "type": "person",
                 "action": Actions.add_relationships.value,
@@ -417,7 +417,7 @@ class TrackAPIV2:
         if not relationships:
             raise AsyncCustomerIOError("relationships cannot be blank in delete_person_relationships")
 
-        await self._send_entity(
+        await self.send_entity(
             {
                 "type": "person",
                 "action": Actions.delete_relationships.value,
@@ -443,7 +443,7 @@ class TrackAPIV2:
         if not identifiers:
             raise AsyncCustomerIOError("identifiers cannot be blank in identify_object")
 
-        await self._send_entity(
+        await self.send_entity(
             {
                 "type": "object",
                 "action": Actions.identify.value,
@@ -460,7 +460,7 @@ class TrackAPIV2:
         if not identifiers:
             raise AsyncCustomerIOError("identifiers cannot be blank in delete_object")
 
-        await self._send_entity(
+        await self.send_entity(
             {
                 "type": "object",
                 "action": Actions.delete.value,
@@ -485,7 +485,7 @@ class TrackAPIV2:
         if not name:
             raise AsyncCustomerIOError("name cannot be blank in track_object_event")
 
-        await self._send_entity(
+        await self.send_entity(
             {
                 "type": "object",
                 "action": Actions.event.value,
@@ -511,7 +511,7 @@ class TrackAPIV2:
         if not relationships:
             raise AsyncCustomerIOError("relationships cannot be blank in add_object_relationships")
 
-        await self._send_entity(
+        await self.send_entity(
             {
                 "type": "object",
                 "action": Actions.add_relationships.value,
@@ -535,7 +535,7 @@ class TrackAPIV2:
         if not relationships:
             raise AsyncCustomerIOError("relationships cannot be blank in delete_object_relationships")
 
-        await self._send_entity(
+        await self.send_entity(
             {
                 "type": "object",
                 "action": Actions.delete_relationships.value,

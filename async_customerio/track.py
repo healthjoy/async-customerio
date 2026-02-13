@@ -372,13 +372,16 @@ class AsyncCustomerIO(AsyncClientBase):
         if not identifiers:
             raise AsyncCustomerIOError("identifiers cannot be blank in send_entity")
 
-        await self.v2._send_entity(
-            {
+        base_url = self.setup_base_url(host=self.host, port=self.port, prefix=self.API_V2_PREFIX)
+        await self.send_request(
+            "POST",
+            join_url(base_url, TrackAPIV2.ENTITY_ENDPOINT),
+            json_payload={
                 "type": type,
                 "action": action.value,
                 "identifiers": identifiers,
                 "attributes": attrs,
-            }
+            },
         )
 
     async def send_batch(self, payload: t.List[EntityPayload]) -> None:
