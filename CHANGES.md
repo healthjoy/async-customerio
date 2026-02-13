@@ -1,5 +1,27 @@
 # Changelog
 
+## 2.5.0
+
+- Introduce dedicated ``TrackAPIV2`` class for the Customer.io Track API v2, accessible via the ``cio.v2`` property.
+
+  - **Person operations** (12 methods): ``identify_person``, ``delete_person``, ``track_person_event``,
+    ``person_pageview``, ``person_screen``, ``add_person_device``, ``delete_person_device``,
+    ``suppress_person``, ``unsuppress_person``, ``merge_persons``, ``add_person_relationships``,
+    ``delete_person_relationships``.
+
+  - **Object operations** (5 methods): ``identify_object``, ``delete_object``, ``track_object_event``,
+    ``add_object_relationships``, ``delete_object_relationships``.
+
+  - **Batch**: ``send_batch`` for submitting multiple entity operations in one request.
+
+- Add object identifier types: ``IdentifierObject``, ``IdentifierCIOObject``, ``ObjectIdentifiers``,
+  ``PersonIdentifiers``.
+
+- Expand ``EntityPayload`` TypedDict with optional ``name``, ``device`` and ``cio_relationships`` fields.
+
+- ``send_entity`` and ``send_batch`` on ``AsyncCustomerIO`` are now thin delegates to ``cio.v2``
+  and remain available for backwards compatibility.
+
 ## 2.4.1
 
 - Fixed a bug in URL encoding that caused a malformed request.

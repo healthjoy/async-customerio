@@ -1,11 +1,13 @@
 """
-Implements the async client that interacts with Customer.io's Track API version 1 and version 2
+Implements the async client that interacts with Customer.io's Track API version 1
 using Site ID and API Keys.
+
+For the v2 Track API, see :mod:`async_customerio.track_v2` (accessed via the ``.v2`` property).
 """
 
+from __future__ import annotations
 import typing as t
 from datetime import datetime
-from enum import Enum
 from typing import Optional
 from urllib.parse import quote
 
@@ -14,32 +16,8 @@ from async_customerio.client_base import AsyncClientBase
 from async_customerio.constants import CIOID, EMAIL, ID, IdentifierCIOID, IdentifierEMAIL, IdentifierID
 from async_customerio.errors import AsyncCustomerIOError
 from async_customerio.regions import Region, Regions
+from async_customerio.track_v2 import Actions, EntityPayload, TrackAPIV2  # noqa: re-export for backwards compat
 from async_customerio.utils import datetime_to_timestamp, join_url, sanitize
-
-
-class Actions(str, Enum):
-    """Defines type of action that can be performed for each type. Used in V2 API."""
-
-    identify = "identify"
-    delete = "delete"
-    event = "event"
-    screen = "screen"
-    page = "page"
-    add_relationships = "add_relationships"
-    delete_relationships = "delete_relationships"
-    add_device = "add_device"
-    delete_device = "delete_device"
-    merge = "merge"
-    suppress = "suppress"
-    unsuppress = "unsuppress"
-
-
-class EntityPayload(t.TypedDict):
-    identifiers: t.Union[IdentifierID, IdentifierEMAIL, IdentifierCIOID]
-    type: str
-    action: Actions
-    # Extra attributes for the entity are allowed and can be passed as normal key-value pairs.
-    # phone_number="123-456-7890", address="123 Main St" etc.
 
 
 class AsyncCustomerIO(AsyncClientBase):
@@ -70,10 +48,6 @@ class AsyncCustomerIO(AsyncClientBase):
     CUSTOMER_UNSUPRESS_ENDPOINT = "{customer_endpoint}/unsuppress".format(customer_endpoint=CUSTOMER_ENDPOINT)
     EVENTS_ENDPOINT = "/events"
     MERGE_CUSTOMERS_ENDPOINT = "/merge_customers"
-
-    # Track V2 endpoints
-    ENTITY_ENDPOINT = "/entity"
-    BATCH_ENDPOINT = "/batch"
 
     def __init__(
         self,
@@ -347,6 +321,22 @@ class AsyncCustomerIO(AsyncClientBase):
             json_payload=post_data,
         )
 
+    @property
+    def v2(self) -> TrackAPIV2:
+        """Access the v2 Track API client.
+
+        Returns a :class:`~async_customerio.track_v2.TrackAPIV2` instance that shares
+        the same HTTP connection, credentials and retry configuration.
+
+        Usage::
+
+            async with AsyncCustomerIO(site_id="...", api_key="...") as cio:
+                await cio.v2.identify_person({"id": 123}, name="John")
+        """
+        if not hasattr(self, "_v2"):
+            self._v2 = TrackAPIV2(self)
+        return self._v2
+
     async def send_request(
         self,
         method: str,
@@ -367,13 +357,14 @@ class AsyncCustomerIO(AsyncClientBase):
     async def send_entity(
         self, identifiers: t.Union[IdentifierID, IdentifierEMAIL, IdentifierCIOID], type: str, action: Actions, **attrs
     ) -> None:
-        """
-        This endpoint lets you create, update, or delete a single person or object—including
-        managing relationships between objects and people.
+        """Send a single v2 entity operation.
+
+        .. deprecated::
+            Use the convenience methods on :attr:`v2` instead (e.g. ``cio.v2.identify_person(...)``).
 
         :param identifiers: The person you want to perform an action for—one of either ``id``, ``email``, or ``cio_id``.
             Example: ``{"id": 123}`` or ``{"email": "john.doh@domain.com"}``
-        :param entity_type: the type of entity you are working with. Should be either ``person`` or ``object``.
+        :param type: the type of entity you are working with. Should be either ``person`` or ``object``.
         :param action: the action to perform. Should be one of the values defined in ``Actions`` enum.
         :param attrs: additional attributes to set on the entity.
         :return: None if successful. Otherwise raises ``AsyncCustomerIOError``.
@@ -381,31 +372,22 @@ class AsyncCustomerIO(AsyncClientBase):
         if not identifiers:
             raise AsyncCustomerIOError("identifiers cannot be blank in send_entity")
 
-        post_data = {
-            "type": type,
-            "action": action.value,
-            "identifiers": identifiers,
-            "attributes": attrs,
-        }
-        base_url = self.setup_base_url(host=self.host, port=self.port, prefix=self.API_V2_PREFIX)
-        await self.send_request("POST", join_url(base_url, self.ENTITY_ENDPOINT), json_payload=post_data)
+        await self.v2._send_entity(
+            {
+                "type": type,
+                "action": action.value,
+                "identifiers": identifiers,
+                "attributes": attrs,
+            }
+        )
 
     async def send_batch(self, payload: t.List[EntityPayload]) -> None:
-        """
-        This endpoint lets batch requests for different people and objects in a single request. Each object in array
-        represents an individual "entity" operation—it represents a change for a person, an object, or a delivery.
+        """Send a batch of v2 entity operations.
 
-        You can mix types in this request; you are not limited to a batch containing only objects or only people.
-        An "object" is a non-person entity that you want to associate with one or more people—like a company,
-        an educational course that people enroll in, etc.
-
-        The batch request must be smaller than 500kb. Each of the requests within the batch must also be 32kb
-        or smaller.
+        .. deprecated::
+            Use ``cio.v2.send_batch(...)`` instead.
 
         :param payload: list of entity payloads.
         :return: None if successful. Otherwise raises ``AsyncCustomerIOError``.
         """
-
-        post_data = {"batch": payload}
-        base_url = self.setup_base_url(host=self.host, port=self.port, prefix=self.API_V2_PREFIX)
-        await self.send_request("POST", join_url(base_url, self.BATCH_ENDPOINT), json_payload=post_data)
+        await self.v2.send_batch(payload)

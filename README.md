@@ -68,33 +68,99 @@ that your account is based in the US (`Regions.US`). If your account is based in
 
 ## Track API v2
 
-This client now includes convenience helpers for the Customer.io Track V2 API. V2 uses two endpoints:
+The v2 Track API is accessed via the `.v2` property on the `AsyncCustomerIO` instance. It provides
+typed convenience methods for all person and object operations, sharing the same connection and
+credentials as the v1 client.
 
-- `/api/v2/entity` — single-entity operations (identify, delete, event, relationships, devices, etc.)
-- `/api/v2/batch` — submit multiple entity operations in one request (useful for bulk uploads).
-
-Basic usage:
+### Person operations
 
 ```python
 import asyncio
 
 from async_customerio import AsyncCustomerIO, Regions
-from async_customerio.track import Actions
 
 
-async def v2_examples():
-    cio = AsyncCustomerIO(site_id="site", api_key="key", region=Regions.US)
+async def main():
+    async with AsyncCustomerIO(site_id="site", api_key="key", region=Regions.US) as cio:
+        # Identify (create or update) a person
+        await cio.v2.identify_person(identifiers={"id": 123}, name="Jane", plan="premium")
 
-    # Single entity operation (identify a person)
-    await cio.send_entity(
-        identifiers={"id": 123},
-        type="person",
-        action=Actions.identify,
-        name="Jane",
-        plan="premium",
+        # Track an event
+        await cio.v2.track_person_event(identifiers={"id": 123}, name="purchase", amount=49.99)
+
+        # Page view / screen view (mobile)
+        await cio.v2.person_pageview(identifiers={"id": 123}, name="/pricing")
+        await cio.v2.person_screen(identifiers={"id": 123}, name="home_screen")
+
+        # Device management
+        await cio.v2.add_person_device(identifiers={"id": 123}, device_id="tok_abc", platform="ios")
+        await cio.v2.delete_person_device(identifiers={"id": 123}, device_id="tok_abc")
+
+        # Suppress / unsuppress
+        await cio.v2.suppress_person(identifiers={"id": 123})
+        await cio.v2.unsuppress_person(identifiers={"id": 123})
+
+        # Merge two person profiles (secondary is deleted)
+        await cio.v2.merge_persons(primary={"id": 123}, secondary={"email": "old@example.com"})
+
+        # Delete a person
+        await cio.v2.delete_person(identifiers={"id": 123})
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+### Object operations
+
+```python
+async with AsyncCustomerIO(site_id="site", api_key="key") as cio:
+    # Identify (create or update) an object
+    await cio.v2.identify_object(
+        identifiers={"object_type_id": "1", "object_id": "acme"},
+        name="Acme Corp",
+        industry="Software",
     )
 
-    # Batch of entity operations
+    # Track an event on an object
+    await cio.v2.track_object_event(
+        identifiers={"object_type_id": "1", "object_id": "acme"},
+        name="plan_changed",
+    )
+
+    # Delete an object
+    await cio.v2.delete_object(identifiers={"object_type_id": "1", "object_id": "acme"})
+```
+
+### Relationships
+
+```python
+async with AsyncCustomerIO(site_id="site", api_key="key") as cio:
+    # Relate a person to an object
+    await cio.v2.add_person_relationships(
+        identifiers={"id": 123},
+        relationships=[{"identifiers": {"object_type_id": "1", "object_id": "acme"}}],
+    )
+
+    # Relate an object to people
+    await cio.v2.add_object_relationships(
+        identifiers={"object_type_id": "1", "object_id": "acme"},
+        relationships=[{"identifiers": {"id": 123}}, {"identifiers": {"id": 456}}],
+    )
+
+    # Remove relationships
+    await cio.v2.delete_person_relationships(
+        identifiers={"id": 123},
+        relationships=[{"identifiers": {"object_type_id": "1", "object_id": "acme"}}],
+    )
+```
+
+### Batch operations
+
+```python
+from async_customerio.track_v2 import Actions
+
+async with AsyncCustomerIO(site_id="site", api_key="key") as cio:
     batch = [
         {
             "type": "person",
@@ -105,23 +171,19 @@ async def v2_examples():
         {
             "type": "object",
             "action": Actions.identify.value,
-            "identifiers": {"id": "account_1"},
-            "attributes": {"name": "Account A"},
+            "identifiers": {"object_type_id": "1", "object_id": "acme"},
+            "attributes": {"name": "Acme Corp"},
         },
     ]
-
-    await cio.send_batch(batch)
-
-
-if __name__ == "__main__":
-    asyncio.run(v2_examples())
+    await cio.v2.send_batch(batch)
 ```
 
-Notes:
+### Notes
 
-- `send_entity` validates that `identifiers` is present and constructs a payload of the shape ``{type, action, identifiers, attributes}``.
-- `send_batch` accepts a list of entity payloads. The API enforces size limits (each item <= 32kb, whole batch < 500kb); obey those limits in production.
-- Response handling: the client treats HTTP 200 and 207 as success (methods return `None`, matching other Track methods). HTTP 400 (malformed request) will raise `AsyncCustomerIOError`.
+- All v2 methods validate required parameters and raise `AsyncCustomerIOError` for missing identifiers, names, etc.
+- The API enforces size limits: each item <= 32 KB, whole batch < 500 KB.
+- HTTP 200 and 207 are treated as success (methods return `None`). HTTP 400+ raises `AsyncCustomerIOError`.
+- The legacy `cio.send_entity()` and `cio.send_batch()` methods still work for backwards compatibility but delegate to the `.v2` class internally.
 
 ## Securely verify requests [doc](https://customer.io/docs/journeys/webhooks/#securely-verify-requests)
 
