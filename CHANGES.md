@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.6.0
+
+- [BREAKING] Drop support of Python 3.9
+- Support of Python 3.14 added
+
 ## 2.5.0
 
 - Introduce dedicated ``TrackAPIV2`` class for the Customer.io Track API v2, accessible via the ``cio.v2`` property.

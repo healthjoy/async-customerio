@@ -8,7 +8,7 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/3629b50827ef4e89ba0eaa5c09584273)](https://www.codacy.com/gh/healthjoy/async-customerio/dashboard?utm_source=github.com&utm_medium=referral&utm_content=healthjoy/async-customerio&utm_campaign=Badge_Coverage)
 
 - Free software: MIT license
-- Requires: Python 3.9+
+- Requires: Python 3.10+
 
 ## Features
 
