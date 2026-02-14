@@ -6,6 +6,7 @@ For the v2 Track API, see :mod:`async_customerio.track_v2` (accessed via the ``.
 """
 
 from __future__ import annotations
+
 import typing as t
 from datetime import datetime
 from typing import Optional
@@ -16,7 +17,7 @@ from async_customerio.client_base import AsyncClientBase
 from async_customerio.constants import CIOID, EMAIL, ID, IdentifierCIOID, IdentifierEMAIL, IdentifierID
 from async_customerio.errors import AsyncCustomerIOError
 from async_customerio.regions import Region, Regions
-from async_customerio.track_v2 import Actions, EntityPayload, TrackAPIV2  # noqa: re-export for backwards compat
+from async_customerio.track_v2 import Actions, EntityPayload, TrackAPIV2  # noqa: F401 - re-export for backwards compat
 from async_customerio.utils import datetime_to_timestamp, join_url, sanitize
 
 

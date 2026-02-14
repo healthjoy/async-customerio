@@ -60,7 +60,7 @@ jobs:
       - name: Log currently installed packages and versions
         run: poetry show
 
-  linters-black:
+  linters-ruff:
     needs: create-virtualenv
     runs-on: ubuntu-22.04
     steps:
@@ -91,8 +91,11 @@ jobs:
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction
 
-      - name: Check code style
-        run: poetry run black --check --line-length=120 --diff async_customerio
+      - name: Ruff lint
+        run: poetry run ruff check async_customerio
+
+      - name: Ruff format
+        run: poetry run ruff format --check async_customerio
 
   linters-mypy:
     needs: create-virtualenv
@@ -131,7 +134,7 @@ jobs:
           poetry run mypy --install-types --no-error-summary --hide-error-codes --follow-imports=skip async_customerio
 
   test:
-    needs: [ linters-black, linters-mypy ]
+    needs: [ linters-ruff, linters-mypy ]
     runs-on: ubuntu-22.04
     strategy:
       matrix:

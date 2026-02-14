@@ -11,6 +11,7 @@ underlying HTTP connection, credentials and retry logic are shared with the v1 c
 """
 
 from __future__ import annotations
+
 import typing as t
 from enum import Enum
 
