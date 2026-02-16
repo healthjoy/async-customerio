@@ -66,6 +66,17 @@ cio = AsyncCustomerIO(site_id, api_key, region=Regions.US)
 that your account is based in the US (`Regions.US`). If your account is based in the EU and you do not provide the correct region
 (`Regions.EU`), we'll route requests to our EU data centers accordingly, however, this may cause data to be logged in the US.
 
+### Custom User-Agent
+
+By default every request is sent with the `User-Agent` header set to `async-customerio/<version>`.
+You can override it via the `user_agent` parameter:
+
+```python
+cio = AsyncCustomerIO(site_id, api_key, user_agent="my-app/1.0")
+```
+
+The same parameter is available on `AsyncAPIClient`.
+
 ## Track API v2
 
 The v2 Track API is accessed via the `.v2` property on the `AsyncCustomerIO` instance. It provides

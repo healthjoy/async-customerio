@@ -59,6 +59,7 @@ class AsyncCustomerIO(AsyncClientBase):
         port: Optional[int] = None,
         retries: int = 3,
         request_timeout: RequestTimeout = DEFAULT_REQUEST_TIMEOUT,
+        user_agent: Optional[str] = None,
     ):
         if not isinstance(region, Region):
             raise AsyncCustomerIOError("invalid region provided")
@@ -68,7 +69,7 @@ class AsyncCustomerIO(AsyncClientBase):
         self.host = host or self.DEFAULT_API_HOST
         self.port = port or self.DEFAULT_API_PORT
 
-        super().__init__(retries=retries, request_timeout=request_timeout)
+        super().__init__(retries=retries, request_timeout=request_timeout, user_agent=user_agent)
 
     @staticmethod
     def _url_encode(id_: t.Union[str, int]) -> str:

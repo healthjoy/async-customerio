@@ -273,13 +273,14 @@ class AsyncAPIClient(AsyncClientBase):
         region: Region = Regions.US,
         retries: int = 3,
         request_timeout: RequestTimeout = DEFAULT_REQUEST_TIMEOUT,
+        user_agent: Optional[str] = None,
     ):
         if not isinstance(region, Region):
             raise AsyncCustomerIOError("invalid region provided")
 
         self.key = key
         self.base_url = url or "https://{host}".format(host=region.api_host)
-        super().__init__(retries=retries, request_timeout=request_timeout)
+        super().__init__(retries=retries, request_timeout=request_timeout, user_agent=user_agent)
 
     async def send_email(self, request: SendEmailRequest) -> dict:
         # prefer duck-typing: require a `to_dict` method rather than strict class check
