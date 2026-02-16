@@ -42,18 +42,21 @@ class AsyncClientBase:
         *,
         request_timeout: RequestTimeout = DEFAULT_REQUEST_TIMEOUT,
         request_limits: RequestLimits = DEFAULT_REQUEST_LIMITS,
+        user_agent: Optional[str] = None,
     ):
         """
 
         :param retries: set number of retries before give up
         :param request_timeout: advanced feature that allows to change request timeout.
         :param request_limits: advanced feature that allows to control the connection pool size.
+        :param user_agent: custom User-Agent header value. Defaults to ``async-customerio/<version>``.
         """
 
         self._retries = retries
         self._request_timeout = request_timeout
         self._request_transport = httpx.AsyncHTTPTransport(limits=httpx.Limits(**request_limits.__dict__))
         self._http_client: t.Optional[httpx.AsyncClient] = None
+        self._user_agent = user_agent or "async-customerio/{0}".format(PACKAGE_VERSION)
 
     @property
     def _client(self) -> httpx.AsyncClient:
@@ -92,7 +95,7 @@ class AsyncClientBase:
             "Content-Type": "application/json",
             "X-Request-Id": self._get_request_id(),
             "X-Timestamp": datetime.now(timezone.utc).isoformat(),
-            "User-Agent": "async-customerio/{0}".format(PACKAGE_VERSION),
+            "User-Agent": self._user_agent,
         }
 
     async def send_request(

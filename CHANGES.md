@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.7.0
+
+- Add optional ``user_agent`` parameter to ``AsyncCustomerIO``, ``AsyncAPIClient``, and the base client.
+  Allows overriding the default ``async-customerio/<version>`` User-Agent header.
+
 ## 2.6.0
 
 - [BREAKING] Drop support of Python 3.9

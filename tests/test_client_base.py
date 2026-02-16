@@ -1,7 +1,7 @@
 import pytest
 import httpx
 
-from async_customerio.client_base import AsyncClientBase, AsyncCustomerIOError, AsyncCustomerIORetryableError
+from async_customerio.client_base import AsyncClientBase, AsyncCustomerIOError, AsyncCustomerIORetryableError, PACKAGE_VERSION
 
 
 pytestmark = pytest.mark.asyncio
@@ -80,3 +80,15 @@ async def test_lazy_client_recreation_after_closed():
     recreated = client._client
     assert recreated is not original
     assert client._http_client is recreated
+
+
+def test_default_user_agent():
+    client = AsyncClientBase()
+    headers = client._prepare_headers()
+    assert headers["User-Agent"] == f"async-customerio/{PACKAGE_VERSION}"
+
+
+def test_custom_user_agent():
+    client = AsyncClientBase(user_agent="my-app/1.0")
+    headers = client._prepare_headers()
+    assert headers["User-Agent"] == "my-app/1.0"
