@@ -42,7 +42,7 @@ class Actions(str, Enum):
 
 
 # ---------------------------------------------------------------------------
-# EntityPayload TypedDict (Python 3.9-compatible two-class pattern)
+# EntityPayload TypedDict (two-class pattern for required/optional fields)
 # ---------------------------------------------------------------------------
 
 
