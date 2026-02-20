@@ -1,6 +1,12 @@
 import logging
 
-from async_customerio.api import AsyncAPIClient, SendEmailRequest, SendPushRequest, SendSMSRequest  # noqa
+from async_customerio.api import (  # noqa
+    AsyncAPIClient,
+    SendEmailRequest,
+    SendInboxMessageRequest,
+    SendPushRequest,
+    SendSMSRequest,
+)
 from async_customerio.constants import (  # noqa
     IdentifierCIOObject,
     IdentifierObject,

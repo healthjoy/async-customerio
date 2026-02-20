@@ -9,6 +9,7 @@ from async_customerio import (
     AsyncCustomerIOError,
     AsyncCustomerIORetryableError,
     SendEmailRequest,
+    SendInboxMessageRequest,
     SendPushRequest,
     SendSMSRequest,
 )
@@ -155,3 +156,37 @@ async def test_send_sms(send_sms_request, fake_async_api_client, httpx_mock: HTT
 async def test_send_sms_invalid_request(invalid_request, fake_async_api_client):
     with pytest.raises(AsyncCustomerIOError, match="invalid request provided"):
         await fake_async_api_client.send_sms(invalid_request)
+
+
+@pytest.mark.parametrize(
+    "send_inbox_message_request", (
+        SendInboxMessageRequest(transactional_message_id="3", identifiers={"id": "2"}),
+        SendInboxMessageRequest(
+            transactional_message_id="3",
+            identifiers={"email": "test@example.com"},
+        ),
+        SendInboxMessageRequest(
+            transactional_message_id="3",
+            identifiers={"id": "2"},
+            message_data={
+                "attr_1": "value_1",
+                "attr_2": "value_2",
+            },
+        ),
+    )
+)
+async def test_send_inbox_message(send_inbox_message_request, fake_async_api_client, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+    response = await fake_async_api_client.send_inbox_message(send_inbox_message_request)
+    assert response
+
+
+@pytest.mark.parametrize(
+    "invalid_request", (
+        {"transactional_message_id": "3", "identifiers": {"id": "2"}},
+        FakeSendRequest("john@doh.com", "billy@jean.com", "Whiskey"),
+    )
+)
+async def test_send_inbox_message_invalid_request(invalid_request, fake_async_api_client):
+    with pytest.raises(AsyncCustomerIOError, match="invalid request provided"):
+        await fake_async_api_client.send_inbox_message(invalid_request)
