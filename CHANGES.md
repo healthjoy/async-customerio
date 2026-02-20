@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.8.0
+
+- Add support for sending transactional inbox messages via ``SendInboxMessageRequest`` and ``AsyncAPIClient.send_inbox_message()``.
+
 ## 2.7.0
 
 - Add optional ``user_agent`` parameter to ``AsyncCustomerIO``, ``AsyncAPIClient``, and the base client.

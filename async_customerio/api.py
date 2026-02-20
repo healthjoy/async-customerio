@@ -260,11 +260,60 @@ class SendSMSRequest:
         return to_dict(field_map=field_map, instance=self)
 
 
+class SendInboxMessageRequest:
+    """An object with all the options available for triggering a transactional inbox message."""
+
+    def __init__(
+        self,
+        transactional_message_id: Optional[Union[str, int]] = None,
+        identifiers: Optional[Union[IdentifierID, IdentifierEMAIL, IdentifierCIOID]] = None,
+        disable_message_retention: bool = False,
+        queue_draft: bool = False,
+        message_data: Optional[dict] = None,
+        send_at: Optional[int] = None,
+        language: Optional[str] = None,
+    ) -> None:
+        """Constructor of the inbox message object that is sent along with the request.
+
+        :param transactional_message_id: The transactional message template that you want to use for your message.
+        :param identifiers: Identifies the person represented by your transactional message by one of, and only one of,
+            ``IdentifierID``, ``IdentifierEMAIL``, ``IdentifierCIOID``.
+        :param disable_message_retention: If true, the message body is not retained in delivery history. Default is set
+            to ``False``.
+        :param queue_draft: If true, your transactional message is held as a draft in Customer.io and not sent directly
+            to your audience. Default is set to ``False``.
+        :param message_data: A dictionary containing the key-value pairs referenced using **liquid** in your message.
+        :param send_at: A unix timestamp (seconds since epoch) determining when the message will be sent.
+        :param language: Overrides language preferences for the person you want to send your transactional message to.
+        """
+        self.transactional_message_id = transactional_message_id
+        self.identifiers = identifiers
+        self.disable_message_retention = disable_message_retention
+        self.queue_draft = queue_draft
+        self.message_data = message_data
+        self.send_at = send_at
+        self.language = language
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Build a request payload from the object."""
+        field_map = dict(
+            transactional_message_id="transactional_message_id",
+            identifiers="identifiers",
+            disable_message_retention="disable_message_retention",
+            queue_draft="queue_draft",
+            message_data="message_data",
+            send_at="send_at",
+            language="language",
+        )
+        return to_dict(field_map=field_map, instance=self)
+
+
 class AsyncAPIClient(AsyncClientBase):
     API_PREFIX = "/v1"
     SEND_EMAIL_ENDPOINT = "/send/email"
     SEND_PUSH_NOTIFICATION_ENDPOINT = "/send/push"
     SEND_SMS_ENDPOINT = "/send/sms"
+    SEND_INBOX_MESSAGE_ENDPOINT = "/send/inbox_message"
 
     def __init__(
         self,
@@ -312,6 +361,17 @@ class AsyncAPIClient(AsyncClientBase):
         return await self.send_request(
             "POST",
             join_url(self.base_url, self.API_PREFIX, self.SEND_SMS_ENDPOINT),
+            json_payload=request.to_dict(),
+            headers={"Authorization": f"Bearer {self.key}"},
+        )
+
+    async def send_inbox_message(self, request: SendInboxMessageRequest) -> dict:
+        if not hasattr(request, "to_dict"):
+            raise AsyncCustomerIOError("invalid request provided")
+
+        return await self.send_request(
+            "POST",
+            join_url(self.base_url, self.API_PREFIX, self.SEND_INBOX_MESSAGE_ENDPOINT),
             json_payload=request.to_dict(),
             headers={"Authorization": f"Bearer {self.key}"},
         )

@@ -15,7 +15,7 @@
 - Fully async
 - Interface preserved as Official Python Client `customerio` has
 - Send push notification
-- Send messages
+- Send messages (email, SMS, push, inbox)
 
 ## Installation
 
@@ -195,6 +195,29 @@ async with AsyncCustomerIO(site_id="site", api_key="key") as cio:
 - The API enforces size limits: each item <= 32 KB, whole batch < 500 KB.
 - HTTP 200 and 207 are treated as success (methods return `None`). HTTP 400+ raises `AsyncCustomerIOError`.
 - The legacy `cio.send_entity()` and `cio.send_batch()` methods still work for backwards compatibility but delegate to the `.v2` class internally.
+
+## Sending transactional inbox messages
+
+```python
+import asyncio
+
+from async_customerio import AsyncAPIClient, SendInboxMessageRequest, Regions
+
+
+async def main():
+    api = AsyncAPIClient(key="your-app-api-key", region=Regions.US)
+    request = SendInboxMessageRequest(
+        transactional_message_id="3",
+        identifiers={"id": "user_123"},
+        message_data={"name": "Jane", "order_id": "1234"},
+    )
+    response = await api.send_inbox_message(request)
+    print(response)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
 
 ## Securely verify requests [doc](https://customer.io/docs/journeys/webhooks/#securely-verify-requests)
 
