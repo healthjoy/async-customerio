@@ -11,6 +11,7 @@ from async_customerio.regions import Region, Regions
 from async_customerio.utils import join_url
 
 from .customers import Customers
+from .segments import Segments
 from .send import SendEmailRequest, SendInboxMessageRequest, SendPushRequest, SendSMSRequest
 
 
@@ -53,6 +54,19 @@ class AsyncAPIClient(AsyncClientBase):
         if not hasattr(self, "_customers"):
             self._customers = Customers(self)
         return self._customers
+
+    @property
+    def segments(self) -> Segments:
+        """Access segment-related API methods.
+
+        Usage::
+
+            async with AsyncAPIClient(key="...") as client:
+                result = await client.segments.list()
+        """
+        if not hasattr(self, "_segments"):
+            self._segments = Segments(self)
+        return self._segments
 
     def _build_url(self, endpoint: str) -> str:
         """Build a full URL for the given endpoint path."""
