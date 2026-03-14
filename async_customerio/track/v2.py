@@ -21,7 +21,7 @@ from async_customerio.utils import join_url, sanitize
 
 
 if t.TYPE_CHECKING:
-    from async_customerio.track import AsyncCustomerIO
+    from async_customerio.track.v1 import AsyncCustomerIO
 
 
 class Actions(str, Enum):
