@@ -16,6 +16,7 @@
 - Interface preserved as Official Python Client `customerio` has
 - Send push notification
 - Send messages (email, SMS, push, inbox)
+- App API support (customers, and more to come)
 
 ## Installation
 
@@ -169,7 +170,7 @@ async with AsyncCustomerIO(site_id="site", api_key="key") as cio:
 ### Batch operations
 
 ```python
-from async_customerio.track_v2 import Actions
+from async_customerio.track.v2 import Actions
 
 async with AsyncCustomerIO(site_id="site", api_key="key") as cio:
     batch = [
@@ -213,6 +214,47 @@ async def main():
     )
     response = await api.send_inbox_message(request)
     print(response)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## App API — Customers
+
+The `AsyncAPIClient` provides access to the [Customer.io App API](https://docs.customer.io/api/app/).
+Customer endpoints are accessed via the `.customers` namespace:
+
+```python
+import asyncio
+
+from async_customerio import AsyncAPIClient, Regions
+
+
+async def main():
+    async with AsyncAPIClient(key="your-app-api-key", region=Regions.US) as client:
+        # Look up customers by email
+        result = await client.customers.get_by_email("test@example.com")
+
+        # Search with filters and pagination
+        result = await client.customers.search(
+            filter={"and": [{"segment": {"id": 1}}]},
+            limit=10,
+        )
+
+        # Get customers with attributes by IDs
+        result = await client.customers.get_by_ids([1, 2, 3])
+
+        # Look up a single customer's attributes, segments, messages, etc.
+        attrs = await client.customers.get_attributes(42)
+        segments = await client.customers.get_segments(42)
+        messages = await client.customers.get_messages(42, start_ts=1700000000, limit=5)
+        activities = await client.customers.get_activities(42, type="event")
+        relationships = await client.customers.get_relationships(42)
+        prefs = await client.customers.get_subscription_preferences(42)
+
+        # Use id_type to reference by email or cio_id instead of id
+        attrs = await client.customers.get_attributes("test@example.com", id_type="email")
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from async_customerio import AsyncCustomerIO, AsyncCustomerIOError, AsyncCustomerIORetryableError
-from async_customerio.track_v2 import Actions
+from async_customerio.track.v2 import Actions
 
 
 pytestmark = pytest.mark.asyncio

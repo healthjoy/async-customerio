@@ -2,7 +2,7 @@
 Implements the async client that interacts with Customer.io's Track API version 1
 using Site ID and API Keys.
 
-For the v2 Track API, see :mod:`async_customerio.track_v2` (accessed via the ``.v2`` property).
+For the v2 Track API, see :mod:`async_customerio.track.v2` (accessed via the ``.v2`` property).
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ from async_customerio.client_base import AsyncClientBase
 from async_customerio.constants import CIOID, EMAIL, ID, IdentifierCIOID, IdentifierEMAIL, IdentifierID
 from async_customerio.errors import AsyncCustomerIOError
 from async_customerio.regions import Region, Regions
-from async_customerio.track_v2 import Actions, EntityPayload, TrackAPIV2  # noqa: F401 - re-export for backwards compat
+from async_customerio.track.v2 import Actions, EntityPayload, TrackAPIV2  # noqa: F401 - re-export for backwards compat
 from async_customerio.utils import datetime_to_timestamp, join_url, sanitize
 
 
@@ -327,7 +327,7 @@ class AsyncCustomerIO(AsyncClientBase):
     def v2(self) -> TrackAPIV2:
         """Access the v2 Track API client.
 
-        Returns a :class:`~async_customerio.track_v2.TrackAPIV2` instance that shares
+        Returns a :class:`~async_customerio.track.v2.TrackAPIV2` instance that shares
         the same HTTP connection, credentials and retry configuration.
 
         Usage::

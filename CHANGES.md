@@ -1,5 +1,26 @@
 # Changelog
 
+## 2.9.0
+
+- Reorganize project structure into subpackages:
+
+  - **Track API** moved to ``async_customerio.track`` package (``track.v1`` and ``track.v2`` modules).
+  - **App API** moved to ``async_customerio.api`` package (``api._client`` and ``api.send`` modules).
+  - Top-level imports (``from async_customerio import ...``) remain unchanged.
+
+- Begin implementing the Customer.io App API. New ``client.customers`` namespace on ``AsyncAPIClient``
+  with 9 methods:
+
+  - ``get_by_email`` — look up customers by email address.
+  - ``search`` — search for customers using audience filters with pagination.
+  - ``get_by_ids`` — list customers with attributes and devices by IDs (up to 100).
+  - ``get_attributes`` — look up a customer's attributes.
+  - ``get_segments`` — look up a customer's segments.
+  - ``get_messages`` — look up messages sent to a customer.
+  - ``get_activities`` — look up a customer's activities.
+  - ``get_relationships`` — look up a customer's relationships to objects.
+  - ``get_subscription_preferences`` — look up a customer's subscription topic preferences.
+
 ## 2.8.0
 
 - Add support for sending transactional inbox messages via ``SendInboxMessageRequest`` and ``AsyncAPIClient.send_inbox_message()``.

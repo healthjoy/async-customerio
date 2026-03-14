@@ -1,16 +1,16 @@
 """
-Implements the client that interacts with Customer.io"s App API using app keys.
+Transactional message request objects for the Customer.io App API.
+
+Each class represents a request payload for sending a specific type of transactional message
+(email, push, SMS, or inbox message).
 """
 
 import base64
-from typing import Any, Dict, Literal, Optional, Protocol, TypedDict, Union
+from typing import Any, Dict, Literal, Optional, TypedDict, Union
 
-from async_customerio._config import DEFAULT_REQUEST_TIMEOUT, RequestTimeout
-from async_customerio.client_base import AsyncClientBase
 from async_customerio.constants import IdentifierCIOID, IdentifierEMAIL, IdentifierID
 from async_customerio.errors import AsyncCustomerIOError
-from async_customerio.regions import Region, Regions
-from async_customerio.utils import join_url, to_dict
+from async_customerio.utils import to_dict
 
 
 CustomDevice = TypedDict(
@@ -22,10 +22,6 @@ CustomDevice = TypedDict(
         "attributes": dict,
     },
 )
-
-
-class HasToDict(Protocol):
-    def to_dict(self) -> Dict[str, Any]: ...
 
 
 class SendEmailRequest:
@@ -306,72 +302,3 @@ class SendInboxMessageRequest:
             language="language",
         )
         return to_dict(field_map=field_map, instance=self)
-
-
-class AsyncAPIClient(AsyncClientBase):
-    API_PREFIX = "/v1"
-    SEND_EMAIL_ENDPOINT = "/send/email"
-    SEND_PUSH_NOTIFICATION_ENDPOINT = "/send/push"
-    SEND_SMS_ENDPOINT = "/send/sms"
-    SEND_INBOX_MESSAGE_ENDPOINT = "/send/inbox_message"
-
-    def __init__(
-        self,
-        key: str,
-        url: Optional[str] = None,
-        region: Region = Regions.US,
-        retries: int = 3,
-        request_timeout: RequestTimeout = DEFAULT_REQUEST_TIMEOUT,
-        user_agent: Optional[str] = None,
-    ):
-        if not isinstance(region, Region):
-            raise AsyncCustomerIOError("invalid region provided")
-
-        self.key = key
-        self.base_url = url or "https://{host}".format(host=region.api_host)
-        super().__init__(retries=retries, request_timeout=request_timeout, user_agent=user_agent)
-
-    async def send_email(self, request: SendEmailRequest) -> dict:
-        # prefer duck-typing: require a `to_dict` method rather than strict class check
-        if not hasattr(request, "to_dict"):
-            raise AsyncCustomerIOError("invalid request provided")
-
-        return await self.send_request(
-            "POST",
-            join_url(self.base_url, self.API_PREFIX, self.SEND_EMAIL_ENDPOINT),
-            json_payload=request.to_dict(),
-            headers={"Authorization": f"Bearer {self.key}"},
-        )
-
-    async def send_push(self, request: SendPushRequest) -> dict:
-        if not hasattr(request, "to_dict"):
-            raise AsyncCustomerIOError("invalid request provided")
-
-        return await self.send_request(
-            "POST",
-            join_url(self.base_url, self.API_PREFIX, self.SEND_PUSH_NOTIFICATION_ENDPOINT),
-            json_payload=request.to_dict(),
-            headers={"Authorization": f"Bearer {self.key}"},
-        )
-
-    async def send_sms(self, request: SendSMSRequest) -> dict:
-        if not hasattr(request, "to_dict"):
-            raise AsyncCustomerIOError("invalid request provided")
-
-        return await self.send_request(
-            "POST",
-            join_url(self.base_url, self.API_PREFIX, self.SEND_SMS_ENDPOINT),
-            json_payload=request.to_dict(),
-            headers={"Authorization": f"Bearer {self.key}"},
-        )
-
-    async def send_inbox_message(self, request: SendInboxMessageRequest) -> dict:
-        if not hasattr(request, "to_dict"):
-            raise AsyncCustomerIOError("invalid request provided")
-
-        return await self.send_request(
-            "POST",
-            join_url(self.base_url, self.API_PREFIX, self.SEND_INBOX_MESSAGE_ENDPOINT),
-            json_payload=request.to_dict(),
-            headers={"Authorization": f"Bearer {self.key}"},
-        )
