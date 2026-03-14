@@ -237,6 +237,4 @@ class Customers:
         if language is not None:
             params["language"] = language
 
-        return await self._client._request(
-            "GET", f"/customers/{customer_id}/subscription_preferences", params=params
-        )
+        return await self._client._request("GET", f"/customers/{customer_id}/subscription_preferences", params=params)
