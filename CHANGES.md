@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.10.0
+
+- New ``client.segments`` namespace on ``AsyncAPIClient`` with 7 methods:
+
+  - ``list`` — list all segments.
+  - ``get`` — get a single segment by ID.
+  - ``create`` — create a manual segment.
+  - ``delete`` — delete a segment.
+  - ``get_customer_count`` — get the number of customers in a segment.
+  - ``get_membership`` — list customers in a segment with pagination.
+  - ``get_used_by`` — get a segment's dependencies.
+
 ## 2.9.0
 
 - Reorganize project structure into subpackages:

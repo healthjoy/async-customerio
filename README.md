@@ -261,6 +261,28 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
+## App API — Segments
+
+```python
+async with AsyncAPIClient(key="your-app-api-key") as client:
+    # List all segments
+    result = await client.segments.list()
+
+    # Create a manual segment
+    result = await client.segments.create("VIP Users", description="High-value customers")
+
+    # Get a segment, its customer count, and dependencies
+    segment = await client.segments.get(segment_id=1)
+    count = await client.segments.get_customer_count(segment_id=1)
+    deps = await client.segments.get_used_by(segment_id=1)
+
+    # List customers in a segment with pagination
+    members = await client.segments.get_membership(segment_id=1, limit=50)
+
+    # Delete a segment
+    await client.segments.delete(segment_id=1)
+```
+
 ## Securely verify requests [doc](https://customer.io/docs/journeys/webhooks/#securely-verify-requests)
 
 ```python
