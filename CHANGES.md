@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.11.0
+
+- Add pluggable retry strategy via the new ``retry_strategy`` parameter on ``AsyncCustomerIO``,
+  ``AsyncAPIClient``, and the base client. Any object implementing the ``RetryStrategy`` protocol
+  (a single ``async execute(func, *args, **kwargs)`` method) can be passed in to add automatic
+  retries with custom backoff logic (e.g. *tenacity*). When no strategy is provided, behaviour
+  is unchanged — transient failures raise ``AsyncCustomerIORetryableError`` for the caller to handle.
+
 ## 2.10.0
 
 - New ``client.segments`` namespace on ``AsyncAPIClient`` with 7 methods:

@@ -322,6 +322,59 @@ async with AsyncAPIClient(key="your-app-api-key") as client:
     await client.segments.delete(segment_id=1)
 ```
 
+## Custom Retry Strategy
+
+By default the library does **not** retry failed requests — it raises
+`AsyncCustomerIORetryableError` for transient failures (transport errors, 429, 502–504)
+so you can handle retries however you like.
+
+If you want **automatic retries**, pass a `retry_strategy` that implements the
+`RetryStrategy` protocol. Any object with an `async execute(func, *args, **kwargs)` method
+will work.
+
+### Using Tenacity
+
+```python
+import asyncio
+
+from tenacity import AsyncRetrying, retry_if_exception_type, stop_after_attempt, wait_exponential
+
+from async_customerio import AsyncCustomerIO, AsyncCustomerIORetryableError, Regions
+
+
+class TenacityRetryStrategy:
+    """Retry strategy backed by tenacity."""
+
+    def __init__(self, **kwargs):
+        self._kwargs = kwargs
+
+    async def execute(self, func, *args, **kwargs):
+        async for attempt in AsyncRetrying(**self._kwargs):
+            with attempt:
+                return await func(*args, **kwargs)
+
+
+async def main():
+    retry = TenacityRetryStrategy(
+        retry=retry_if_exception_type(AsyncCustomerIORetryableError),
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=1, min=1, max=30),
+    )
+    async with AsyncCustomerIO(
+        site_id="YOUR_SITE_ID",
+        api_key="YOUR_API_KEY",
+        region=Regions.US,
+        retry_strategy=retry,
+    ) as cio:
+        await cio.identify(id=1, name="Jane")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+The same `retry_strategy` parameter is available on `AsyncAPIClient`.
+
 ## Securely verify requests [doc](https://customer.io/docs/journeys/webhooks/#securely-verify-requests)
 
 ```python

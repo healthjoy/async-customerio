@@ -8,6 +8,7 @@ from async_customerio._config import DEFAULT_REQUEST_TIMEOUT, RequestTimeout
 from async_customerio.client_base import AsyncClientBase
 from async_customerio.errors import AsyncCustomerIOError
 from async_customerio.regions import Region, Regions
+from async_customerio.retry import RetryStrategy
 from async_customerio.utils import join_url
 
 from .customers import Customers
@@ -34,13 +35,14 @@ class AsyncAPIClient(AsyncClientBase):
         retries: int = 3,
         request_timeout: RequestTimeout = DEFAULT_REQUEST_TIMEOUT,
         user_agent: Optional[str] = None,
+        retry_strategy: Optional[RetryStrategy] = None,
     ):
         if not isinstance(region, Region):
             raise AsyncCustomerIOError("invalid region provided")
 
         self.key = key
         self.base_url = url or "https://{host}".format(host=region.api_host)
-        super().__init__(retries=retries, request_timeout=request_timeout, user_agent=user_agent)
+        super().__init__(retries=retries, request_timeout=request_timeout, user_agent=user_agent, retry_strategy=retry_strategy)
 
     @property
     def customers(self) -> Customers:
