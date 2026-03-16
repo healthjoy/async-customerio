@@ -71,7 +71,9 @@ class AsyncCustomerIO(AsyncClientBase):
         self.host = host or self.DEFAULT_API_HOST
         self.port = port or self.DEFAULT_API_PORT
 
-        super().__init__(retries=retries, request_timeout=request_timeout, user_agent=user_agent, retry_strategy=retry_strategy)
+        super().__init__(
+            retries=retries, request_timeout=request_timeout, user_agent=user_agent, retry_strategy=retry_strategy
+        )
 
     @staticmethod
     def _url_encode(id_: t.Union[str, int]) -> str:

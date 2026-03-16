@@ -42,7 +42,9 @@ class AsyncAPIClient(AsyncClientBase):
 
         self.key = key
         self.base_url = url or "https://{host}".format(host=region.api_host)
-        super().__init__(retries=retries, request_timeout=request_timeout, user_agent=user_agent, retry_strategy=retry_strategy)
+        super().__init__(
+            retries=retries, request_timeout=request_timeout, user_agent=user_agent, retry_strategy=retry_strategy
+        )
 
     @property
     def customers(self) -> Customers:
