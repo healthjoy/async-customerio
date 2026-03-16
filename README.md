@@ -16,7 +16,35 @@
 - Interface preserved as Official Python Client `customerio` has
 - Send push notification
 - Send messages (email, SMS, push, inbox)
-- App API support (customers, and more to come)
+- App API support (customers, segments, and more to come)
+
+## App API coverage
+
+| Category | Endpoints | Status |
+|---|---|---|
+| Customers | 9 | Implemented |
+| Segments | 7 | Implemented |
+| Send Messages | 5 | Implemented |
+| Transactional | 9 | Not yet |
+| Campaigns | 13 | Not yet |
+| Broadcasts | 15 | Not yet |
+| Newsletters | 16 | Not yet |
+| Messages | 3 | Not yet |
+| Objects | 4 | Not yet |
+| Activities | 1 | Not yet |
+| Collections | 7 | Not yet |
+| Exports | 5 | Not yet |
+| Imports | 2 | Not yet |
+| Snippets | 4 | Not yet |
+| Design Studio | 20 | Not yet |
+| Assets | 10 | Not yet |
+| Sender Identities | 3 | Not yet |
+| Reporting Webhooks | 5 | Not yet |
+| ESP Suppression | 4 | Not yet |
+| Subscription Center | 1 | Not yet |
+| Data Index | 2 | Not yet |
+| Workspaces | 1 | Not yet |
+| Info | 1 | Not yet |
 
 ## Installation
 
