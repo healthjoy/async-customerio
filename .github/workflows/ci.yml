@@ -131,7 +131,7 @@ jobs:
 
       - name: Static type checker
         run: |
-          python -m pip install types-setuptools
+          poetry run pip install types-setuptools
           poetry run mypy --install-types --no-error-summary --hide-error-codes --follow-imports=skip async_customerio
 
   test:
