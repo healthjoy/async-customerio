@@ -18,6 +18,17 @@
 - Send messages (email, SMS, push, inbox)
 - App API support (customers, segments, and more to come)
 
+## Track API coverage
+
+| Category | Endpoints | Status |
+|---|---|---|
+| Track Customers | 8 | Implemented |
+| Track Events | 4 | Implemented |
+| Track Segments | 2 | Not yet |
+| Track v2 | 2 | Implemented |
+| Region | 1 | Not yet |
+| Forms | 1 | Not yet |
+
 ## App API coverage
 
 | Category | Endpoints | Status |
