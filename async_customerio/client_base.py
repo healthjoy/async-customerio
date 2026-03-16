@@ -19,6 +19,7 @@ import httpx
 
 from async_customerio._config import DEFAULT_REQUEST_LIMITS, DEFAULT_REQUEST_TIMEOUT, RequestLimits, RequestTimeout
 from async_customerio.errors import AsyncCustomerIOError, AsyncCustomerIORetryableError
+from async_customerio.retry import RetryStrategy
 from async_customerio.utils import sanitize
 
 
@@ -43,6 +44,7 @@ class AsyncClientBase:
         request_timeout: RequestTimeout = DEFAULT_REQUEST_TIMEOUT,
         request_limits: RequestLimits = DEFAULT_REQUEST_LIMITS,
         user_agent: Optional[str] = None,
+        retry_strategy: Optional[RetryStrategy] = None,
     ):
         """
 
@@ -50,9 +52,15 @@ class AsyncClientBase:
         :param request_timeout: advanced feature that allows to change request timeout.
         :param request_limits: advanced feature that allows to control the connection pool size.
         :param user_agent: custom User-Agent header value. Defaults to ``async-customerio/<version>``.
+        :param retry_strategy: an optional :class:`~async_customerio.retry.RetryStrategy` instance
+            that wraps each HTTP call with custom retry logic (e.g. exponential backoff via *tenacity*).
+            When ``None`` (the default), no automatic retries are performed — the library raises
+            :class:`~async_customerio.errors.AsyncCustomerIORetryableError` for transient failures
+            so the caller can decide how to retry.
         """
 
         self._retries = retries
+        self._retry_strategy = retry_strategy
         self._request_timeout = request_timeout
         self._request_transport = httpx.AsyncHTTPTransport(limits=httpx.Limits(**request_limits.__dict__))
         self._http_client: t.Optional[httpx.AsyncClient] = None
@@ -116,6 +124,30 @@ class AsyncClientBase:
         :param headers: request headers.
         :param auth: Credentials to use when sending requests.
         :return: dict
+        """
+
+        if self._retry_strategy is not None:
+            return await self._retry_strategy.execute(
+                self._do_request, method, url, json_payload=json_payload, headers=headers, auth=auth
+            )
+        return await self._do_request(method, url, json_payload=json_payload, headers=headers, auth=auth)
+
+    async def _do_request(
+        self,
+        method: str,
+        url: str,
+        *,
+        json_payload: Optional[t.Dict[str, t.Any]] = None,
+        headers: Optional[t.Dict[str, str]] = None,
+        auth: t.Optional[t.Tuple[str, str]] = None,
+    ) -> t.Union[dict]:
+        """Execute a single HTTP request with error classification.
+
+        This is the inner implementation called by :meth:`send_request`.
+        When a :class:`~async_customerio.retry.RetryStrategy` is configured,
+        this method is invoked through the strategy so that transient failures
+        (those that raise :class:`~async_customerio.errors.AsyncCustomerIORetryableError`)
+        can be retried transparently.
         """
 
         merged_headers = self._prepare_headers()
