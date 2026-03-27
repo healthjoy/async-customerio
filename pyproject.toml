@@ -1,17 +1,16 @@
-[tool.poetry]
+[project]
 name = "async-customerio"
 version = "2.11.0"
 description = "Async CustomerIO Client - a Python client to interact with CustomerIO in an async fashion."
 license = "MIT"
 authors = [
-    "Aleksandr Omyshev <oomyshev@healthjoy.com>"
+    { name = "Aleksandr Omyshev", email = "oomyshev@healthjoy.com" },
 ]
 maintainers = [
-    "Healthjoy Developers <developers@healthjoy.com>",
-    "Aleksandr Omyshev <oomyshev@healthjoy.com>"
+    { name = "Healthjoy Developers", email = "developers@healthjoy.com" },
+    { name = "Aleksandr Omyshev", email = "oomyshev@healthjoy.com" },
 ]
 readme = "README.md"
-repository = "https://github.com/healthjoy/async-customerio"
 keywords = [
     "async", "asyncio", "customerio", "messaing", "python3", "data-driven-emails", "push notifications",
     "in-app messages", "SMS",
@@ -28,12 +27,14 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
 ]
+requires-python = ">=3.10,<3.15"
+dependencies = [
+    "httpx[http2]>=0.28.1,<1.0.0",
+    "h11>=0.16.0",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.10,<3.15"
-
-httpx = { version = ">=0.28.1,<1.0.0", extras = ["http2"] }
-h11 = { version = ">=0.16.0" }
+[project.urls]
+Repository = "https://github.com/healthjoy/async-customerio"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "~4.2"
@@ -49,6 +50,26 @@ pytest-freezegun = "~0.4.2"
 pytest-httpx = "~0.35"
 ruff = "~0.9"
 mypy = "~1.15.0"
+
+[tool.pytest.ini_options]
+addopts = "--pyargs -ra --no-cov-on-fail --disable-pytest-warnings --cache-clear --cov=async_customerio --cov-config=.coveragerc --cov-branch --cov-report=xml --cov-report=term"
+norecursedirs = [
+    ".eggs",
+    "*.egg",
+    ".ropeproject",
+    "build",
+]
+testpaths = ["tests"]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+console_output_style = "progress"
+
+[tool.mypy]
+python_version = "3.10"
+follow_imports = "skip"
+ignore_missing_imports = true
 
 [tool.ruff]
 line-length = 120
