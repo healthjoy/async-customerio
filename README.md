@@ -1,65 +1,47 @@
-# async-customerio is a lightweight asynchronous client to interact with CustomerIO
+<p align="center">
+  <img src="logo.svg" alt="async-customerio logo" width="480"/>
+</p>
 
-[![PyPI download month](https://img.shields.io/pypi/dm/async-customerio.svg)](https://pypi.python.org/pypi/async-customerio/)
-[![PyPI version fury.io](https://badge.fury.io/py/async-customerio.svg)](https://pypi.python.org/pypi/async-customerio/)
-[![PyPI license](https://img.shields.io/pypi/l/async-customerio.svg)](https://pypi.python.org/pypi/async-customerio/)
-[![PyPI pyversions](https://img.shields.io/pypi/pyversions/async-customerio.svg)](https://pypi.python.org/pypi/async-customerio/)
-[![CI](https://github.com/healthjoy/async-customerio/actions/workflows/ci.yml/badge.svg)](https://github.com/healthjoy/async-customerio/actions/workflows/ci.yml)
-[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/3629b50827ef4e89ba0eaa5c09584273)](https://www.codacy.com/gh/healthjoy/async-customerio/dashboard?utm_source=github.com&utm_medium=referral&utm_content=healthjoy/async-customerio&utm_campaign=Badge_Coverage)
+<h1 align="center">async-customerio</h1>
+<p align="center"><em>A lightweight asynchronous Python client to interact with Customer.io</em></p>
+
+<p align="center">
+  <a href="https://pypi.python.org/pypi/async-customerio/"><img src="https://img.shields.io/pypi/dm/async-customerio.svg" alt="PyPI downloads"></a>
+  <a href="https://pypi.python.org/pypi/async-customerio/"><img src="https://badge.fury.io/py/async-customerio.svg" alt="PyPI version"></a>
+  <a href="https://pypi.python.org/pypi/async-customerio/"><img src="https://img.shields.io/pypi/l/async-customerio.svg" alt="License"></a>
+  <a href="https://pypi.python.org/pypi/async-customerio/"><img src="https://img.shields.io/pypi/pyversions/async-customerio.svg" alt="Python versions"></a>
+  <a href="https://github.com/healthjoy/async-customerio/actions/workflows/ci.yml"><img src="https://github.com/healthjoy/async-customerio/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://www.codacy.com/gh/healthjoy/async-customerio/dashboard?utm_source=github.com&utm_medium=referral&utm_content=healthjoy/async-customerio&utm_campaign=Badge_Coverage"><img src="https://app.codacy.com/project/badge/Coverage/3629b50827ef4e89ba0eaa5c09584273" alt="Coverage"></a>
+</p>
 
 - Free software: MIT license
 - Requires: Python 3.10+
 
 ## Features
 
-- Fully async
-- Interface preserved as Official Python Client `customerio` has
-- Send push notification
-- Send messages (email, SMS, push, inbox)
-- App API support (customers, segments, and more to come)
+- Fully asynchronous — built on [httpx](https://www.python-httpx.org/) with HTTP/2 support
+- Async context manager support for clean resource management
+- Compatible interface with the official [customerio](https://github.com/customerio/customerio-python) Python client
+- Track API v1 & v2 (persons, objects, relationships, batch operations)
+- App API support (customers, segments, send messages)
+- Pluggable retry strategy via the `RetryStrategy` protocol
+- Webhook signature verification
 
-## Track API coverage
+## Table of Contents
 
-| Category | Endpoints | Status |
-|---|---|---|
-| Track Customers | 8 | Implemented |
-| Track Events | 4 | Implemented |
-| Track Segments | 2 | Not yet |
-| Track v2 | 2 | Implemented |
-| Region | 1 | Not yet |
-| Forms | 1 | Not yet |
-
-## App API coverage
-
-| Category | Endpoints | Status |
-|---|---|---|
-| Customers | 9 | Implemented |
-| Segments | 7 | Implemented |
-| Send Messages | 5 | Implemented |
-| Transactional | 9 | Not yet |
-| Campaigns | 13 | Not yet |
-| Broadcasts | 15 | Not yet |
-| Newsletters | 16 | Not yet |
-| Messages | 3 | Not yet |
-| Objects | 4 | Not yet |
-| Activities | 1 | Not yet |
-| Collections | 7 | Not yet |
-| Exports | 5 | Not yet |
-| Imports | 2 | Not yet |
-| Snippets | 4 | Not yet |
-| Design Studio | 20 | Not yet |
-| Assets | 10 | Not yet |
-| Sender Identities | 3 | Not yet |
-| Reporting Webhooks | 5 | Not yet |
-| ESP Suppression | 4 | Not yet |
-| Subscription Center | 1 | Not yet |
-| Data Index | 2 | Not yet |
-| Workspaces | 1 | Not yet |
-| Info | 1 | Not yet |
+- [Installation](#installation)
+- [Getting started](#getting-started)
+- [Configuration](#configuration)
+- [Track API v1](#track-api-v1)
+- [Track API v2](#track-api-v2)
+- [App API](#app-api)
+- [Custom Retry Strategy](#custom-retry-strategy)
+- [Webhook Signature Verification](#webhook-signature-verification)
+- [API Coverage](#api-coverage)
 
 ## Installation
 
-```shell script
+```shell
 pip install async-customerio
 ```
 
@@ -72,26 +54,26 @@ from async_customerio import AsyncCustomerIO, Regions
 
 
 async def main():
-    site_id = "Some-id-gotten-from-CustomerIO"
-    api_key = "Some-key-gotten-from-CustomerIO"
-    cio = AsyncCustomerIO(site_id, api_key, region=Regions.US)
-    await cio.identify(
-        id=5,
-        email="customer@example.com",
-        first_name="John",
-        last_name="Doh",
-        subscription_plan="premium",
-    )
-    await cio.track(
-        customer_id=5, name="product.purchased", product_sku="XYZ-12345", price=23.45
-    )
+    async with AsyncCustomerIO(site_id="YOUR_SITE_ID", api_key="YOUR_API_KEY", region=Regions.US) as cio:
+        await cio.identify(
+            id=5,
+            email="customer@example.com",
+            first_name="John",
+            last_name="Doe",
+            subscription_plan="premium",
+        )
+        await cio.track(
+            customer_id=5, name="product.purchased", product_sku="XYZ-12345", price=23.45
+        )
 
 
 if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-### Instantiating `AsyncCustomerIO` object
+## Configuration
+
+### Region
 
 Create an instance of the client with your [Customer.io credentials](https://fly.customer.io/settings/api_credentials).
 
@@ -117,6 +99,17 @@ cio = AsyncCustomerIO(site_id, api_key, user_agent="my-app/1.0")
 
 The same parameter is available on `AsyncAPIClient`.
 
+## Track API v1
+
+```python
+async with AsyncCustomerIO(site_id="site", api_key="key", region=Regions.US) as cio:
+    # Identify a customer
+    await cio.identify(id=5, email="customer@example.com", first_name="John")
+
+    # Track an event
+    await cio.track(customer_id=5, name="product.purchased", product_sku="XYZ-12345", price=23.45)
+```
+
 ## Track API v2
 
 The v2 Track API is accessed via the `.v2` property on the `AsyncCustomerIO` instance. It provides
@@ -126,40 +119,30 @@ credentials as the v1 client.
 ### Person operations
 
 ```python
-import asyncio
+async with AsyncCustomerIO(site_id="site", api_key="key", region=Regions.US) as cio:
+    # Identify (create or update) a person
+    await cio.v2.identify_person(identifiers={"id": 123}, name="Jane", plan="premium")
 
-from async_customerio import AsyncCustomerIO, Regions
+    # Track an event
+    await cio.v2.track_person_event(identifiers={"id": 123}, name="purchase", amount=49.99)
 
+    # Page view / screen view (mobile)
+    await cio.v2.person_pageview(identifiers={"id": 123}, name="/pricing")
+    await cio.v2.person_screen(identifiers={"id": 123}, name="home_screen")
 
-async def main():
-    async with AsyncCustomerIO(site_id="site", api_key="key", region=Regions.US) as cio:
-        # Identify (create or update) a person
-        await cio.v2.identify_person(identifiers={"id": 123}, name="Jane", plan="premium")
+    # Device management
+    await cio.v2.add_person_device(identifiers={"id": 123}, device_id="tok_abc", platform="ios")
+    await cio.v2.delete_person_device(identifiers={"id": 123}, device_id="tok_abc")
 
-        # Track an event
-        await cio.v2.track_person_event(identifiers={"id": 123}, name="purchase", amount=49.99)
+    # Suppress / unsuppress
+    await cio.v2.suppress_person(identifiers={"id": 123})
+    await cio.v2.unsuppress_person(identifiers={"id": 123})
 
-        # Page view / screen view (mobile)
-        await cio.v2.person_pageview(identifiers={"id": 123}, name="/pricing")
-        await cio.v2.person_screen(identifiers={"id": 123}, name="home_screen")
+    # Merge two person profiles (secondary is deleted)
+    await cio.v2.merge_persons(primary={"id": 123}, secondary={"email": "old@example.com"})
 
-        # Device management
-        await cio.v2.add_person_device(identifiers={"id": 123}, device_id="tok_abc", platform="ios")
-        await cio.v2.delete_person_device(identifiers={"id": 123}, device_id="tok_abc")
-
-        # Suppress / unsuppress
-        await cio.v2.suppress_person(identifiers={"id": 123})
-        await cio.v2.unsuppress_person(identifiers={"id": 123})
-
-        # Merge two person profiles (secondary is deleted)
-        await cio.v2.merge_persons(primary={"id": 123}, secondary={"email": "old@example.com"})
-
-        # Delete a person
-        await cio.v2.delete_person(identifiers={"id": 123})
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    # Delete a person
+    await cio.v2.delete_person(identifiers={"id": 123})
 ```
 
 ### Object operations
@@ -236,7 +219,11 @@ async with AsyncCustomerIO(site_id="site", api_key="key") as cio:
 - HTTP 200 and 207 are treated as success (methods return `None`). HTTP 400+ raises `AsyncCustomerIOError`.
 - The legacy `cio.send_entity()` and `cio.send_batch()` methods still work for backwards compatibility but delegate to the `.v2` class internally.
 
-## Sending transactional inbox messages
+## App API
+
+The `AsyncAPIClient` provides access to the [Customer.io App API](https://docs.customer.io/api/app/).
+
+### Send messages
 
 ```python
 import asyncio
@@ -259,48 +246,37 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-## App API — Customers
+### Customers
 
-The `AsyncAPIClient` provides access to the [Customer.io App API](https://docs.customer.io/api/app/).
 Customer endpoints are accessed via the `.customers` namespace:
 
 ```python
-import asyncio
+async with AsyncAPIClient(key="your-app-api-key", region=Regions.US) as client:
+    # Look up customers by email
+    result = await client.customers.get_by_email("test@example.com")
 
-from async_customerio import AsyncAPIClient, Regions
+    # Search with filters and pagination
+    result = await client.customers.search(
+        filter={"and": [{"segment": {"id": 1}}]},
+        limit=10,
+    )
 
+    # Get customers with attributes by IDs
+    result = await client.customers.get_by_ids([1, 2, 3])
 
-async def main():
-    async with AsyncAPIClient(key="your-app-api-key", region=Regions.US) as client:
-        # Look up customers by email
-        result = await client.customers.get_by_email("test@example.com")
+    # Look up a single customer's attributes, segments, messages, etc.
+    attrs = await client.customers.get_attributes(42)
+    segments = await client.customers.get_segments(42)
+    messages = await client.customers.get_messages(42, start_ts=1700000000, limit=5)
+    activities = await client.customers.get_activities(42, type="event")
+    relationships = await client.customers.get_relationships(42)
+    prefs = await client.customers.get_subscription_preferences(42)
 
-        # Search with filters and pagination
-        result = await client.customers.search(
-            filter={"and": [{"segment": {"id": 1}}]},
-            limit=10,
-        )
-
-        # Get customers with attributes by IDs
-        result = await client.customers.get_by_ids([1, 2, 3])
-
-        # Look up a single customer's attributes, segments, messages, etc.
-        attrs = await client.customers.get_attributes(42)
-        segments = await client.customers.get_segments(42)
-        messages = await client.customers.get_messages(42, start_ts=1700000000, limit=5)
-        activities = await client.customers.get_activities(42, type="event")
-        relationships = await client.customers.get_relationships(42)
-        prefs = await client.customers.get_subscription_preferences(42)
-
-        # Use id_type to reference by email or cio_id instead of id
-        attrs = await client.customers.get_attributes("test@example.com", id_type="email")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    # Use id_type to reference by email or cio_id instead of id
+    attrs = await client.customers.get_attributes("test@example.com", id_type="email")
 ```
 
-## App API — Segments
+### Segments
 
 ```python
 async with AsyncAPIClient(key="your-app-api-key") as client:
@@ -325,7 +301,7 @@ async with AsyncAPIClient(key="your-app-api-key") as client:
 ## Custom Retry Strategy
 
 By default the library does **not** retry failed requests — it raises
-`AsyncCustomerIORetryableError` for transient failures (transport errors, 429, 502–504)
+`AsyncCustomerIORetryableError` for transient failures (transport errors, 429, 502-504)
 so you can handle retries however you like.
 
 If you want **automatic retries**, pass a `retry_strategy` that implements the
@@ -375,39 +351,77 @@ if __name__ == "__main__":
 
 The same `retry_strategy` parameter is available on `AsyncAPIClient`.
 
-## Securely verify requests [doc](https://customer.io/docs/journeys/webhooks/#securely-verify-requests)
+## Webhook Signature Verification
+
+Securely verify that incoming webhooks originate from Customer.io ([docs](https://customer.io/docs/journeys/webhooks/#securely-verify-requests)).
 
 ```python
 from async_customerio import validate_signature
 
 
-def main():
-    webhook_signing_key = (
-        "755781b5e03a973f3405a85474d5a032a60fd56fabaad66039b12eadd83955fa"
-    )
-    x_cio_timestamp = 1692633432  # header  value
-    x_cio_signature = "d7c655389bb364d3e8bdbb6ec18a7f1b6cf91f39bba647554ada78aa61de37b9"  # header value
-    body = b'{"key": "value"}'
-    if validate_signature(
-        signing_key=webhook_signing_key,
-        timestamp=x_cio_timestamp,
-        request_body=body,
-        signature=x_cio_signature,
-    ):
-        print("Request is sent from CustomerIO")
-    else:
-        print("Malicious request received")
+webhook_signing_key = "755781b5e03a973f3405a85474d5a032a60fd56fabaad66039b12eadd83955fa"
+x_cio_timestamp = 1692633432   # header value
+x_cio_signature = "d7c655389bb364d3e8bdbb6ec18a7f1b6cf91f39bba647554ada78aa61de37b9"  # header value
+body = b'{"key": "value"}'
 
-
-if __name__ == "__main__":
-    main()
+if validate_signature(
+    signing_key=webhook_signing_key,
+    timestamp=x_cio_timestamp,
+    request_body=body,
+    signature=x_cio_signature,
+):
+    print("Request is sent from CustomerIO")
+else:
+    print("Malicious request received")
 ```
+
+## API Coverage
+
+<details>
+<summary><strong>Track API</strong> — 14 of 18 endpoints implemented</summary>
+
+| Category | Endpoints | Status |
+|---|---|---|
+| Track Customers | 8 | Implemented |
+| Track Events | 4 | Implemented |
+| Track v2 | 2 | Implemented |
+| Track Segments | 2 | Not yet |
+| Region | 1 | Not yet |
+| Forms | 1 | Not yet |
+
+</details>
+
+<details>
+<summary><strong>App API</strong> — 21 of 131 endpoints implemented</summary>
+
+| Category | Endpoints | Status |
+|---|---|---|
+| Customers | 9 | Implemented |
+| Segments | 7 | Implemented |
+| Send Messages | 5 | Implemented |
+| Transactional | 9 | Not yet |
+| Campaigns | 13 | Not yet |
+| Broadcasts | 15 | Not yet |
+| Newsletters | 16 | Not yet |
+| Messages | 3 | Not yet |
+| Objects | 4 | Not yet |
+| Activities | 1 | Not yet |
+| Collections | 7 | Not yet |
+| Exports | 5 | Not yet |
+| Imports | 2 | Not yet |
+| Snippets | 4 | Not yet |
+| Design Studio | 20 | Not yet |
+| Assets | 10 | Not yet |
+| Sender Identities | 3 | Not yet |
+| Reporting Webhooks | 5 | Not yet |
+| ESP Suppression | 4 | Not yet |
+| Subscription Center | 1 | Not yet |
+| Data Index | 2 | Not yet |
+| Workspaces | 1 | Not yet |
+| Info | 1 | Not yet |
+
+</details>
 
 ## License
 
 `async-customerio` is offered under the MIT license.
-
-## Source code
-
-The latest developer version is available in a GitHub repository:
-[https://github.com/healthjoy/async-customerio](https://github.com/healthjoy/async-customerio)

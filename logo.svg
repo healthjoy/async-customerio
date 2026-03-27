@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 120">
+  <defs>
+    <linearGradient id="bolt" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F7C948"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+    <linearGradient id="envelope" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+    <linearGradient id="python" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Envelope body -->
+  <rect x="12" y="30" width="80" height="60" rx="8" ry="8" fill="url(#envelope)" opacity="0.9"/>
+
+  <!-- Envelope flap -->
+  <path d="M12 38 L52 65 L92 38" fill="none" stroke="#818CF8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Lightning bolt bursting from envelope -->
+  <polygon points="62,10 48,48 64,48 42,90 80,42 60,42" fill="url(#bolt)"/>
+
+  <!-- Async orbit rings -->
+  <ellipse cx="52" cy="55" rx="52" ry="18" fill="none" stroke="#A5B4FC" stroke-width="1.5" stroke-dasharray="6 4" opacity="0.5" transform="rotate(-15 52 55)"/>
+
+  <!-- Small dot on orbit -->
+  <circle cx="100" cy="45" r="3.5" fill="#A5B4FC" opacity="0.8"/>
+
+  <!-- Text: async-customerio -->
+  <text x="118" y="55" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="28" font-weight="700" fill="#1E293B" letter-spacing="-0.5">
+    async
+  </text>
+  <text x="118" y="55" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="28" font-weight="700" fill="url(#python)" letter-spacing="-0.5" opacity="0">
+    async
+  </text>
+  <text x="222" y="55" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="28" font-weight="300" fill="#94A3B8" letter-spacing="-0.5">
+    -
+  </text>
+  <text x="234" y="55" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="28" font-weight="700" fill="#4F46E5" letter-spacing="-0.5">
+    customerio
+  </text>
+
+  <!-- Tagline -->
+  <text x="118" y="78" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="400" fill="#64748B" letter-spacing="2">
+    ASYNC PYTHON CLIENT
+  </text>
+
+  <!-- Three small signal dots -->
+  <circle cx="98" cy="18" r="2" fill="#F59E0B" opacity="0.6"/>
+  <circle cx="106" cy="12" r="1.5" fill="#F59E0B" opacity="0.4"/>
+  <circle cx="112" cy="8" r="1" fill="#F59E0B" opacity="0.25"/>
+</svg>
