@@ -4,11 +4,11 @@ version = "2.11.0"
 description = "Async CustomerIO Client - a Python client to interact with CustomerIO in an async fashion."
 license = "MIT"
 authors = [
-    { name = "Aleksandr Omyshev", email = "oomyshev@healthjoy.com" },
+    { name = "Oleksandr Omyshev", email = "oomyshev@healthjoy.com" },
 ]
 maintainers = [
     { name = "Healthjoy Developers", email = "developers@healthjoy.com" },
-    { name = "Aleksandr Omyshev", email = "oomyshev@healthjoy.com" },
+    { name = "Oleksandr Omyshev", email = "oomyshev@healthjoy.com" },
 ]
 readme = "README.md"
 keywords = [
