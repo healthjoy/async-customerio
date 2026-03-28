@@ -1,5 +1,67 @@
 # Changelog
 
+## 2.13.0
+
+### Bug Fixes
+
+- **Fix**: Track v1 ``add_device()`` sent requests to a malformed URL (literal ``%7Bid%7D``
+  instead of the customer identifier) due to URL encoding applied before placeholder substitution.
+
+- **Fix**: Track v2 ``add_person_device()`` and ``delete_person_device()`` sent the device
+  token under the key ``"id"`` instead of ``"token"`` as required by the v2 API specification.
+
+- **Fix**: Track v2 ``merge_persons()`` sent an incorrect payload structure using
+  ``"identifiers"`` / ``"cio_relationships"`` instead of the ``"primary"`` / ``"secondary"``
+  top-level keys expected by the API.
+
+- **Fix**: ``SendEmailRequest`` field ``disable_css_preprocessing`` was misspelled as
+  ``disable_css_preproceessing`` in both the attribute name and the serialized JSON key,
+  causing the API to silently ignore it.
+
+- **Fix**: ``SendEmailRequest.fake_bcc`` was typed as ``Optional[str]`` but the API expects
+  a boolean. Changed to ``Optional[bool]``.
+
+- **Fix**: ``datetime_to_timestamp()`` now correctly converts timezone-aware datetimes to UTC
+  instead of silently discarding the timezone offset.
+
+- **Fix**: ``sanitize()`` now recursively processes nested dicts and lists. Previously only
+  top-level values were sanitized, causing ``TypeError`` when nested datetimes were serialized
+  to JSON.
+
+### Improvements
+
+- **Fix**: Resolve race condition in lazy HTTP client initialization. Concurrent coroutines
+  could previously create multiple ``httpx.AsyncClient`` instances, orphaning connections.
+  Client creation is now protected by an ``asyncio.Lock``.
+
+- **Fix**: After ``close()`` and subsequent reuse, a fresh ``httpx.AsyncHTTPTransport`` is now
+  created instead of reusing the previously closed transport.
+
+- **Fix**: ``send_request`` return type annotation corrected from ``Union[dict]`` to
+  ``Union[dict, str]`` to reflect the non-JSON text fallback path.
+
+- Both ``AsyncCustomerIO`` and ``AsyncAPIClient`` now accept and forward the
+  ``request_limits`` parameter to the base client, allowing users to customize
+  connection pool settings.
+
+- ``RequestTimeout`` and ``RequestLimits`` are now exported from the top-level
+  ``async_customerio`` package.
+
+- The ``retries`` constructor parameter is deprecated (it was never used for actual retry
+  logic). Use ``retry_strategy`` instead.
+
+- Fixed broken ``identify()`` examples in README (missing required positional ``identifier``
+  argument) and added context manager usage to the App API example.
+
+### Tests
+
+- Added 80 new tests (219 → 299) bringing coverage from 96% to 98%.
+- Track v1 and v2 tests now verify HTTP request URLs, methods, and payload structures.
+- Added regression tests for all bug fixes listed above.
+- Added tests for recursive sanitization, timezone-aware datetime conversion, concurrent
+  client initialization, retryable vs non-retryable HTTP status codes, ``to_dict()`` field
+  mapping, ``SendEmailRequest.attach()``, and transport recreation after close.
+
 ## 2.12.1
 
 - **Security**: Bump ``cryptography`` from 46.0.5 to 46.0.6 to address upstream security fixes. (#48)
