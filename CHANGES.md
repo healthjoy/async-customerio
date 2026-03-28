@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.12.1
+
+- **Security**: Bump ``cryptography`` from 46.0.5 to 46.0.6 to address upstream security fixes. (#48)
+
 ## 2.12.0
 
 - **Fix**: ``send_batch`` now returns the parsed JSON response body instead of ``None``.
