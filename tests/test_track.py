@@ -411,4 +411,5 @@ async def test_eu_region_uses_eu_host(httpx_mock: HTTPXMock):
     await client.identify(1, name="EU")
 
     request = httpx_mock.get_request()
-    assert str(request.url).startswith("https://track-eu.customer.io")
+    url = str(request.url)
+    assert url.startswith("https://track-eu.customer.io/api/v1/customers/")
