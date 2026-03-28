@@ -4,7 +4,7 @@ Implements the client that interacts with Customer.io's App API using app keys.
 
 from typing import Any, Dict, Optional, Protocol
 
-from async_customerio._config import DEFAULT_REQUEST_TIMEOUT, RequestTimeout
+from async_customerio._config import DEFAULT_REQUEST_LIMITS, DEFAULT_REQUEST_TIMEOUT, RequestLimits, RequestTimeout
 from async_customerio.client_base import AsyncClientBase
 from async_customerio.errors import AsyncCustomerIOError
 from async_customerio.regions import Region, Regions
@@ -34,6 +34,7 @@ class AsyncAPIClient(AsyncClientBase):
         region: Region = Regions.US,
         retries: int = 3,
         request_timeout: RequestTimeout = DEFAULT_REQUEST_TIMEOUT,
+        request_limits: RequestLimits = DEFAULT_REQUEST_LIMITS,
         user_agent: Optional[str] = None,
         retry_strategy: Optional[RetryStrategy] = None,
     ):
@@ -43,7 +44,11 @@ class AsyncAPIClient(AsyncClientBase):
         self.key = key
         self.base_url = url or "https://{host}".format(host=region.api_host)
         super().__init__(
-            retries=retries, request_timeout=request_timeout, user_agent=user_agent, retry_strategy=retry_strategy
+            retries=retries,
+            request_timeout=request_timeout,
+            request_limits=request_limits,
+            user_agent=user_agent,
+            retry_strategy=retry_strategy,
         )
 
     @property
@@ -103,12 +108,13 @@ class AsyncAPIClient(AsyncClientBase):
             if clean:
                 url = join_url(url, params=clean)
 
-        return await self.send_request(
+        result = await self.send_request(
             method,
             url,
             json_payload=json_payload,
             headers=self._auth_headers(),
         )
+        return result  # type: ignore[return-value]  # App API endpoints always return JSON
 
     async def send_email(self, request: SendEmailRequest) -> dict:
         # prefer duck-typing: require a `to_dict` method rather than strict class check

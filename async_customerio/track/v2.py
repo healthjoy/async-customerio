@@ -124,11 +124,12 @@ class TrackAPIV2:
         :return: parsed JSON response body.  On **207 Multi-Status** the dict
             contains per-item ``"errors"`` describing partial failures.
         """
-        return await self._client.send_request(
+        result = await self._client.send_request(
             "POST",
             join_url(self._base_url(), self.BATCH_ENDPOINT),
             json_payload={"batch": payload},
         )
+        return result  # type: ignore[return-value]  # batch endpoint always returns JSON
 
     # ==================================================================
     # Person operations
@@ -274,7 +275,7 @@ class TrackAPIV2:
         if not platform:
             raise AsyncCustomerIOError("platform cannot be blank in add_person_device")
 
-        device_data: t.Dict[str, t.Any] = {"id": device_id, "platform": platform}
+        device_data: t.Dict[str, t.Any] = {"token": device_id, "platform": platform}
         device_data.update(device_attrs)
         await self.send_entity(
             {
@@ -305,7 +306,7 @@ class TrackAPIV2:
                 "type": "person",
                 "action": Actions.delete_device.value,
                 "identifiers": identifiers,
-                "device": {"id": device_id},
+                "device": {"token": device_id},
             }
         )
 
@@ -367,8 +368,8 @@ class TrackAPIV2:
             {
                 "type": "person",
                 "action": Actions.merge.value,
-                "identifiers": primary,
-                "cio_relationships": [{"identifiers": secondary}],
+                "primary": primary,
+                "secondary": secondary,
             }
         )
 

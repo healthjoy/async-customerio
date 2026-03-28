@@ -1,6 +1,6 @@
 [project]
 name = "async-customerio"
-version = "2.12.1"
+version = "2.13.0"
 description = "Async CustomerIO Client - a Python client to interact with CustomerIO in an async fashion."
 license = "MIT"
 authors = [

@@ -1,9 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
 from async_customerio import AsyncCustomerIOError
-from async_customerio.utils import datetime_to_timestamp, join_url, sanitize, stringify_list
+from async_customerio.utils import datetime_to_timestamp, join_url, sanitize, stringify_list, to_dict
 
 
 @pytest.mark.parametrize(
@@ -126,3 +126,83 @@ def test_stringify_list(customer_ids, exp_result):
 def test_stringify_list_wrong_type(customer_ids):
     with pytest.raises(AsyncCustomerIOError):
         stringify_list(customer_ids)
+
+
+def test_datetime_to_timestamp_timezone_aware_utc():
+    dt = datetime(2023, 1, 1, tzinfo=timezone.utc)
+    assert datetime_to_timestamp(dt) == 1672531200
+
+
+def test_datetime_to_timestamp_timezone_aware_non_utc():
+    est = timezone(timedelta(hours=-5))
+    dt = datetime(2023, 1, 1, tzinfo=est)
+    assert datetime_to_timestamp(dt) == 1672549200
+
+
+def test_datetime_to_timestamp_non_datetime_raises():
+    with pytest.raises(AsyncCustomerIOError):
+        datetime_to_timestamp("2023-01-01")
+
+
+def test_sanitize_recursive_datetime_in_nested_dict():
+    dt = datetime(2023, 1, 1, tzinfo=timezone.utc)
+    data = {"outer": {"dt": dt}}
+    result = sanitize(data)
+    assert result == {"outer": {"dt": 1672531200}}
+
+
+def test_sanitize_recursive_datetime_in_list():
+    dt = datetime(2023, 1, 1, tzinfo=timezone.utc)
+    data = {"events": [dt]}
+    result = sanitize(data)
+    assert result == {"events": [1672531200]}
+
+
+def test_sanitize_recursive_nan_in_nested_dict():
+    data = {"m": {"v": float("nan")}}
+    result = sanitize(data)
+    assert result == {"m": {"v": None}}
+
+
+def test_sanitize_recursive_nan_in_list():
+    data = {"vals": [1.0, float("nan"), 3.0]}
+    result = sanitize(data)
+    assert result == {"vals": [1.0, None, 3.0]}
+
+
+def test_sanitize_deeply_nested():
+    dt = datetime(2023, 1, 1, tzinfo=timezone.utc)
+    data = {"a": {"b": {"c": [{"d": dt}]}}}
+    result = sanitize(data)
+    assert result == {"a": {"b": {"c": [{"d": 1672531200}]}}}
+
+
+def test_to_dict_basic_mapping():
+    class Obj:
+        name = "Alice"
+        age = 30
+
+    field_map = {"name": "user_name", "age": "user_age"}
+    result = to_dict(field_map, Obj())
+    assert result == {"user_name": "Alice", "user_age": 30}
+
+
+def test_to_dict_excludes_none_by_default():
+    class Obj:
+        name = "Alice"
+        age = None
+
+    field_map = {"name": "user_name", "age": "user_age"}
+    result = to_dict(field_map, Obj())
+    assert result == {"user_name": "Alice"}
+    assert "user_age" not in result
+
+
+def test_to_dict_includes_none_when_configured():
+    class Obj:
+        name = "Alice"
+        age = None
+
+    field_map = {"name": "user_name", "age": "user_age"}
+    result = to_dict(field_map, Obj(), exclude_none=False)
+    assert result == {"user_name": "Alice", "user_age": None}

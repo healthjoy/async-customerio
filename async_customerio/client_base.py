@@ -2,6 +2,7 @@
 Implements the base client that is used by other classes to make requests
 """
 
+import asyncio
 import http
 import logging
 import typing as t
@@ -30,7 +31,7 @@ except Exception:
     PACKAGE_VERSION = "unknown"
 
 
-CUSTOMERIO_UNAVAILABLE_MESSAGE = """Failed to receive valid response after {count} retries.
+CUSTOMERIO_UNAVAILABLE_MESSAGE = """Failed to receive valid response from Customer.io.
 Check system status at http://status.customer.io.
 Last caught exception -- {klass}: {message}
 """
@@ -48,7 +49,7 @@ class AsyncClientBase:
     ):
         """
 
-        :param retries: set number of retries before give up
+        :param retries: deprecated, has no effect. Use ``retry_strategy`` instead.
         :param request_timeout: advanced feature that allows to change request timeout.
         :param request_limits: advanced feature that allows to control the connection pool size.
         :param user_agent: custom User-Agent header value. Defaults to ``async-customerio/<version>``.
@@ -59,30 +60,43 @@ class AsyncClientBase:
             so the caller can decide how to retry.
         """
 
-        self._retries = retries
         self._retry_strategy = retry_strategy
         self._request_timeout = request_timeout
-        self._request_transport = httpx.AsyncHTTPTransport(limits=httpx.Limits(**request_limits.__dict__))
+        self._request_limits = request_limits
         self._http_client: t.Optional[httpx.AsyncClient] = None
+        self._client_lock = asyncio.Lock()
         self._user_agent = user_agent or "async-customerio/{0}".format(PACKAGE_VERSION)
 
-    @property
-    def _client(self) -> httpx.AsyncClient:
-        if self._http_client is None or self._http_client.is_closed:
-            self._http_client = httpx.AsyncClient(
-                timeout=httpx.Timeout(**self._request_timeout.__dict__),
-                transport=self._request_transport,
-            )
-        return self._http_client
+    def _create_client(self) -> httpx.AsyncClient:
+        """Create a new httpx.AsyncClient with a fresh transport."""
+        transport = httpx.AsyncHTTPTransport(limits=httpx.Limits(**self._request_limits.__dict__))
+        return httpx.AsyncClient(
+            timeout=httpx.Timeout(**self._request_timeout.__dict__),
+            transport=transport,
+        )
+
+    async def _get_client(self) -> httpx.AsyncClient:
+        """Return the shared httpx.AsyncClient, creating one if needed.
+
+        Thread-safe via asyncio.Lock to prevent concurrent coroutines from
+        creating multiple clients.
+        """
+        if self._http_client is not None and not self._http_client.is_closed:
+            return self._http_client
+        async with self._client_lock:
+            if self._http_client is None or self._http_client.is_closed:
+                self._http_client = self._create_client()
+            return self._http_client
 
     async def close(self) -> None:
         """Close the internal ``httpx.AsyncClient`` if it exists.
 
         Safe to call multiple times.
         """
-        if self._http_client is not None and not self._http_client.is_closed:
-            await self._http_client.aclose()
-        self._http_client = None
+        async with self._client_lock:
+            if self._http_client is not None and not self._http_client.is_closed:
+                await self._http_client.aclose()
+            self._http_client = None
 
     async def __aenter__(self) -> "AsyncClientBase":
         # Ensure client is initialized lazily by returning self.
@@ -114,7 +128,7 @@ class AsyncClientBase:
         json_payload: Optional[t.Dict[str, t.Any]] = None,
         headers: Optional[t.Dict[str, str]] = None,
         auth: t.Optional[t.Tuple[str, str]] = None,
-    ) -> t.Union[dict]:
+    ) -> t.Union[dict, str]:
         """
         Sends an HTTP call using the ``httpx`` library.
 
@@ -140,7 +154,7 @@ class AsyncClientBase:
         json_payload: Optional[t.Dict[str, t.Any]] = None,
         headers: Optional[t.Dict[str, str]] = None,
         auth: t.Optional[t.Tuple[str, str]] = None,
-    ) -> t.Union[dict]:
+    ) -> t.Union[dict, str]:
         """Execute a single HTTP request with error classification.
 
         This is the inner implementation called by :meth:`send_request`.
@@ -162,7 +176,8 @@ class AsyncClientBase:
             headers,
         )
         try:
-            raw_cio_response: httpx.Response = await self._client.request(
+            client = await self._get_client()
+            raw_cio_response: httpx.Response = await client.request(
                 method,
                 url,
                 json=json_payload and sanitize(json_payload),
@@ -174,7 +189,7 @@ class AsyncClientBase:
             # Raise exception alerting user that the system might be
             # experiencing an outage and refer them to system status page.
             raise AsyncCustomerIORetryableError(
-                CUSTOMERIO_UNAVAILABLE_MESSAGE.format(klass=type(err), message=err, count=self._retries)
+                CUSTOMERIO_UNAVAILABLE_MESSAGE.format(klass=type(err), message=err)
             ) from err
         except httpx.HTTPStatusError as err:
             # Check if the status code is retryable
@@ -185,7 +200,7 @@ class AsyncClientBase:
                 http.HTTPStatus.TOO_MANY_REQUESTS,
             ]:
                 raise AsyncCustomerIORetryableError(
-                    CUSTOMERIO_UNAVAILABLE_MESSAGE.format(klass=type(err), message=err, count=self._retries)
+                    CUSTOMERIO_UNAVAILABLE_MESSAGE.format(klass=type(err), message=err)
                 ) from err
             else:
                 # For non-retryable status codes, raise the base error
@@ -193,9 +208,7 @@ class AsyncClientBase:
         except Exception as err:
             # Raise exception alerting user that the system might be
             # experiencing an outage and refer them to system status page.
-            raise AsyncCustomerIOError(
-                CUSTOMERIO_UNAVAILABLE_MESSAGE.format(klass=type(err), message=err, count=self._retries)
-            ) from err
+            raise AsyncCustomerIOError(CUSTOMERIO_UNAVAILABLE_MESSAGE.format(klass=type(err), message=err)) from err
 
         logging.debug(
             "Response Code: %s, Time spent to make a request: %s",

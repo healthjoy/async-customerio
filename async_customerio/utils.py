@@ -8,30 +8,40 @@ from .errors import AsyncCustomerIOError
 
 
 def datetime_to_timestamp(dt: datetime) -> int:
-    """Convert a timezone-naive or timezone-aware datetime to a unix timestamp (seconds).
+    """Convert a datetime to a unix timestamp (seconds).
+
+    Timezone-naive datetimes are assumed to be UTC.
+    Timezone-aware datetimes are properly converted to UTC.
 
     Raises AsyncCustomerIOError if `dt` is not a datetime instance.
     """
     if not isinstance(dt, datetime):
         raise AsyncCustomerIOError("datetime_to_timestamp expects a datetime instance")
-    return int(dt.replace(tzinfo=timezone.utc).timestamp())
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return int(dt.timestamp())
+
+
+def _sanitize_value(v: t.Any) -> t.Any:
+    """Sanitize a single value, recursing into dicts and lists."""
+    if isinstance(v, datetime):
+        return datetime_to_timestamp(v)
+    if isinstance(v, float) and math.isnan(v):
+        return None
+    if isinstance(v, dict):
+        return {k: _sanitize_value(val) for k, val in v.items()}
+    if isinstance(v, list):
+        return [_sanitize_value(item) for item in v]
+    return v
 
 
 def sanitize(data: t.Dict[str, t.Any]) -> t.Dict[str, t.Any]:
-    """Return a sanitized shallow copy of ``data`` where datetimes are converted to
+    """Return a sanitized copy of ``data`` where datetimes are converted to
     integer timestamps and NaN floats are replaced with None.
 
-    This function does not mutate the input mapping.
+    Recurses into nested dicts and lists. Does not mutate the input mapping.
     """
-    out: t.Dict[str, t.Any] = {}
-    for k, v in data.items():
-        if isinstance(v, datetime):
-            out[k] = datetime_to_timestamp(v)
-        elif isinstance(v, float) and math.isnan(v):
-            out[k] = None
-        else:
-            out[k] = v
-    return out
+    return {k: _sanitize_value(v) for k, v in data.items()}
 
 
 def stringify_list(customer_ids: t.List[t.Union[str, int]]) -> t.List[str]:

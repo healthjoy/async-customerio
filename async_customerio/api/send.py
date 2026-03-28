@@ -41,14 +41,14 @@ class SendEmailRequest:
         body: Optional[str] = None,
         body_amp: Optional[str] = None,
         body_plain: Optional[str] = None,
-        fake_bcc: Optional[str] = None,
+        fake_bcc: Optional[bool] = None,
         disable_message_retention: bool = False,
         send_to_unsubscribed: bool = True,
         tracked: bool = True,
         queue_draft: bool = False,
         message_data: Optional[dict] = None,
         attachments: Optional[Dict[str, str]] = None,
-        disable_css_preproceessing: bool = False,
+        disable_css_preprocessing: bool = False,
         send_at: Optional[int] = None,
         language: Optional[str] = None,
     ):
@@ -71,7 +71,7 @@ class SendEmailRequest:
         self.queue_draft = queue_draft
         self.message_data = message_data
         self.attachments = attachments
-        self.disable_css_preproceessing = disable_css_preproceessing
+        self.disable_css_preprocessing = disable_css_preprocessing
         self.send_at = send_at
         self.language = language
 
@@ -116,7 +116,7 @@ class SendEmailRequest:
             queue_draft="queue_draft",
             message_data="message_data",
             attachments="attachments",
-            disable_css_preproceessing="disable_css_preproceessing",
+            disable_css_preprocessing="disable_css_preprocessing",
             send_at="send_at",
             language="language",
         )

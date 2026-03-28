@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Optional
 from urllib.parse import quote
 
-from async_customerio._config import DEFAULT_REQUEST_TIMEOUT, RequestTimeout
+from async_customerio._config import DEFAULT_REQUEST_LIMITS, DEFAULT_REQUEST_TIMEOUT, RequestLimits, RequestTimeout
 from async_customerio.client_base import AsyncClientBase
 from async_customerio.constants import CIOID, EMAIL, ID, IdentifierCIOID, IdentifierEMAIL, IdentifierID
 from async_customerio.errors import AsyncCustomerIOError
@@ -60,6 +60,7 @@ class AsyncCustomerIO(AsyncClientBase):
         port: Optional[int] = None,
         retries: int = 3,
         request_timeout: RequestTimeout = DEFAULT_REQUEST_TIMEOUT,
+        request_limits: RequestLimits = DEFAULT_REQUEST_LIMITS,
         user_agent: Optional[str] = None,
         retry_strategy: Optional[RetryStrategy] = None,
     ):
@@ -72,7 +73,11 @@ class AsyncCustomerIO(AsyncClientBase):
         self.port = port or self.DEFAULT_API_PORT
 
         super().__init__(
-            retries=retries, request_timeout=request_timeout, user_agent=user_agent, retry_strategy=retry_strategy
+            retries=retries,
+            request_timeout=request_timeout,
+            request_limits=request_limits,
+            user_agent=user_agent,
+            retry_strategy=retry_strategy,
         )
 
     @staticmethod
@@ -224,7 +229,7 @@ class AsyncCustomerIO(AsyncClientBase):
         base_url = self.setup_base_url(host=self.host, port=self.port, prefix=self.API_PREFIX)
         await self.send_request(
             "PUT",
-            join_url(base_url, self.CUSTOMER_DEVICE_ENDPOINT).format(id=customer_id),
+            join_url(base_url, self.CUSTOMER_DEVICE_ENDPOINT.format(id=customer_id)),
             json_payload=payload,
         )
 
@@ -351,7 +356,7 @@ class AsyncCustomerIO(AsyncClientBase):
         json_payload: Optional[t.Dict[str, t.Any]] = None,
         headers: Optional[t.Dict[str, str]] = None,
         auth: t.Optional[t.Tuple[str, str]] = None,
-    ) -> t.Union[dict]:
+    ) -> t.Union[dict, str]:
         return await super().send_request(
             method,
             url,

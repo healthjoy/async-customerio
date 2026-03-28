@@ -1,4 +1,5 @@
-from datetime import datetime
+import json
+from datetime import datetime, timezone
 
 import httpx
 import pytest
@@ -6,6 +7,7 @@ from pytest_httpx import HTTPXMock
 
 from async_customerio import AsyncCustomerIO, AsyncCustomerIOError, AsyncCustomerIORetryableError
 from async_customerio.constants import CIOID, EMAIL, ID
+from async_customerio.regions import Regions
 
 pytestmark = pytest.mark.asyncio
 
@@ -245,3 +247,169 @@ def test_backfill_invalid_timestamp_raises():
         import asyncio
 
         asyncio.get_event_loop().run_until_complete(client.backfill("123", "name", "not-a-timestamp"))
+
+
+async def test_identify_request_url_and_method(fake_async_customerio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+    await fake_async_customerio.identify(42, first_name="John")
+
+    request = httpx_mock.get_request()
+    assert request.method == "PUT"
+    assert "/api/v1/customers/42" in str(request.url)
+    body = json.loads(request.content)
+    assert body == {"first_name": "John"}
+
+
+async def test_identify_url_encodes_special_characters(fake_async_customerio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+    await fake_async_customerio.identify("user@domain.com")
+
+    request = httpx_mock.get_request()
+    assert "user%40domain.com" in str(request.url)
+
+
+async def test_track_request_url_and_payload(fake_async_customerio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+    await fake_async_customerio.track(42, "purchase", amount=99)
+
+    request = httpx_mock.get_request()
+    assert request.method == "POST"
+    assert "/api/v1/customers/42/events" in str(request.url)
+    body = json.loads(request.content)
+    assert body == {"name": "purchase", "data": {"amount": 99}}
+
+
+async def test_track_anonymous_request_payload(fake_async_customerio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+    await fake_async_customerio.track_anonymous("anon-123", "viewed_page", source="google")
+
+    request = httpx_mock.get_request()
+    assert request.method == "POST"
+    assert "/api/v1/events" in str(request.url)
+    body = json.loads(request.content)
+    assert body["anonymous_id"] == "anon-123"
+    assert body["name"] == "viewed_page"
+    assert body["data"]["source"] == "google"
+
+
+async def test_track_anonymous_omits_anonymous_id_when_falsy(fake_async_customerio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+    await fake_async_customerio.track_anonymous("", "event")
+
+    request = httpx_mock.get_request()
+    body = json.loads(request.content)
+    assert "anonymous_id" not in body
+
+
+async def test_pageview_request_payload(fake_async_customerio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+    await fake_async_customerio.pageview(42, "/pricing", ref="google")
+
+    request = httpx_mock.get_request()
+    assert request.method == "POST"
+    body = json.loads(request.content)
+    assert body["type"] == "page"
+    assert body["name"] == "/pricing"
+    assert body["data"]["ref"] == "google"
+
+
+async def test_backfill_request_payload(fake_async_customerio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+    await fake_async_customerio.backfill(42, "old", timestamp=1672531199, src="import")
+
+    request = httpx_mock.get_request()
+    assert request.method == "POST"
+    body = json.loads(request.content)
+    assert body["name"] == "old"
+    assert body["timestamp"] == 1672531199
+    assert body["data"]["src"] == "import"
+
+
+async def test_backfill_converts_datetime_to_timestamp(fake_async_customerio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+    dt = datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    await fake_async_customerio.backfill(42, "old_event", timestamp=dt)
+
+    request = httpx_mock.get_request()
+    body = json.loads(request.content)
+    assert isinstance(body["timestamp"], int)
+    assert body["timestamp"] == int(dt.timestamp())
+
+
+async def test_delete_request_url_and_method(fake_async_customerio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+    await fake_async_customerio.delete(42)
+
+    request = httpx_mock.get_request()
+    assert request.method == "DELETE"
+    assert "/api/v1/customers/42" in str(request.url)
+
+
+async def test_add_device_request_url_and_payload(fake_async_customerio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+    await fake_async_customerio.add_device(42, "tok-abc", "ios")
+
+    request = httpx_mock.get_request()
+    assert request.method == "PUT"
+    assert "/42/devices" in str(request.url)
+    body = json.loads(request.content)
+    assert body == {"device": {"id": "tok-abc", "platform": "ios"}}
+
+
+async def test_delete_device_request_url(fake_async_customerio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+    await fake_async_customerio.delete_device(42, "tok-abc")
+
+    request = httpx_mock.get_request()
+    assert request.method == "DELETE"
+    assert "/42/devices/tok-abc" in str(request.url)
+
+
+async def test_suppress_request_url(fake_async_customerio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+    await fake_async_customerio.suppress(42)
+
+    request = httpx_mock.get_request()
+    assert request.method == "POST"
+    assert "/api/v1/customers/42/suppress" in str(request.url)
+
+
+async def test_unsuppress_request_url(fake_async_customerio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+    await fake_async_customerio.unsuppress(42)
+
+    request = httpx_mock.get_request()
+    assert request.method == "POST"
+    assert "/api/v1/customers/42/unsuppress" in str(request.url)
+
+
+async def test_merge_customers_request_payload(fake_async_customerio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+    await fake_async_customerio.merge_customers("id", 100, "email", "test@a.com")
+
+    request = httpx_mock.get_request()
+    assert request.method == "POST"
+    body = json.loads(request.content)
+    assert body == {"primary": {"id": 100}, "secondary": {"email": "test@a.com"}}
+
+
+async def test_auth_credentials_sent(httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+    client = AsyncCustomerIO(site_id="my_site", api_key="my_key", host="fake-track.customerio.io", retries=1)
+    await client.identify(1, name="Test")
+
+    request = httpx_mock.get_request()
+    assert request.headers.get("authorization") is not None
+    assert "Basic" in request.headers["authorization"]
+
+
+async def test_eu_region_uses_eu_host(httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+    client = AsyncCustomerIO(
+        site_id="site", api_key="key", region=Regions.EU, host=Regions.EU.track_host, retries=1,
+    )
+    await client.identify(1, name="EU")
+
+    request = httpx_mock.get_request()
+    url = str(request.url)
+    assert url.startswith("https://track-eu.customer.io/api/v1/customers/")

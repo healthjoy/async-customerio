@@ -1,3 +1,5 @@
+import json
+
 import httpx
 import pytest
 from pytest_httpx import HTTPXMock
@@ -684,3 +686,360 @@ def test_v2_property_returns_same_instance(cio):
     v2_a = cio.v2
     v2_b = cio.v2
     assert v2_a is v2_b
+
+
+async def test_identify_person_payload_structure(cio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+
+    await cio.v2.identify_person(
+        identifiers={"id": "user_42"},
+        first_name="John",
+        last_name="Smith",
+    )
+
+    request = httpx_mock.get_request()
+    body = json.loads(request.content)
+    assert body["type"] == "person"
+    assert body["action"] == "identify"
+    assert body["identifiers"] == {"id": "user_42"}
+    assert body["attributes"]["first_name"] == "John"
+    assert body["attributes"]["last_name"] == "Smith"
+
+
+async def test_delete_person_payload_structure(cio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+
+    await cio.v2.delete_person(identifiers={"email": "john@example.com"})
+
+    request = httpx_mock.get_request()
+    body = json.loads(request.content)
+    assert body["type"] == "person"
+    assert body["action"] == "delete"
+    assert body["identifiers"] == {"email": "john@example.com"}
+    assert "attributes" not in body
+
+
+async def test_track_person_event_payload_structure(cio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+
+    await cio.v2.track_person_event(
+        identifiers={"id": "user_42"},
+        name="purchase",
+        product="widget",
+        amount=49.99,
+    )
+
+    request = httpx_mock.get_request()
+    body = json.loads(request.content)
+    assert body["type"] == "person"
+    assert body["action"] == "event"
+    assert body["identifiers"] == {"id": "user_42"}
+    assert body["name"] == "purchase"
+    assert body["attributes"]["product"] == "widget"
+    assert body["attributes"]["amount"] == 49.99
+
+
+async def test_person_pageview_payload_structure(cio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+
+    await cio.v2.person_pageview(
+        identifiers={"id": "user_42"},
+        name="/pricing",
+        referrer="https://google.com",
+    )
+
+    request = httpx_mock.get_request()
+    body = json.loads(request.content)
+    assert body["type"] == "person"
+    assert body["action"] == "page"
+    assert body["identifiers"] == {"id": "user_42"}
+    assert body["name"] == "/pricing"
+    assert body["attributes"]["referrer"] == "https://google.com"
+
+
+async def test_person_screen_payload_structure(cio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+
+    await cio.v2.person_screen(
+        identifiers={"id": "user_42"},
+        name="home_screen",
+        os_version="16.0",
+    )
+
+    request = httpx_mock.get_request()
+    body = json.loads(request.content)
+    assert body["type"] == "person"
+    assert body["action"] == "screen"
+    assert body["identifiers"] == {"id": "user_42"}
+    assert body["name"] == "home_screen"
+    assert body["attributes"]["os_version"] == "16.0"
+
+
+async def test_add_person_device_payload_uses_token_field(cio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+
+    await cio.v2.add_person_device(
+        identifiers={"id": "user_42"},
+        device_id="device-token-abc",
+        platform="ios",
+    )
+
+    request = httpx_mock.get_request()
+    body = json.loads(request.content)
+    assert body["type"] == "person"
+    assert body["action"] == "add_device"
+    assert body["identifiers"] == {"id": "user_42"}
+    device = body["device"]
+    assert device["token"] == "device-token-abc"
+    assert device["platform"] == "ios"
+    assert "id" not in device
+
+
+async def test_add_person_device_with_extra_attrs(cio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+
+    await cio.v2.add_person_device(
+        identifiers={"id": "user_42"},
+        device_id="device-token-abc",
+        platform="android",
+        last_used=1234567890,
+    )
+
+    request = httpx_mock.get_request()
+    body = json.loads(request.content)
+    device = body["device"]
+    assert device["token"] == "device-token-abc"
+    assert device["platform"] == "android"
+    assert device["last_used"] == 1234567890
+
+
+async def test_delete_person_device_payload_structure(cio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+
+    await cio.v2.delete_person_device(
+        identifiers={"id": "user_42"},
+        device_id="device-token-abc",
+    )
+
+    request = httpx_mock.get_request()
+    body = json.loads(request.content)
+    assert body["type"] == "person"
+    assert body["action"] == "delete_device"
+    assert body["identifiers"] == {"id": "user_42"}
+    assert body["device"]["token"] == "device-token-abc"
+    assert "id" not in body["device"]
+
+
+async def test_suppress_person_payload_structure(cio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+
+    await cio.v2.suppress_person(identifiers={"id": "user_42"})
+
+    request = httpx_mock.get_request()
+    body = json.loads(request.content)
+    assert body["type"] == "person"
+    assert body["action"] == "suppress"
+    assert body["identifiers"] == {"id": "user_42"}
+    assert "attributes" not in body
+    assert "name" not in body
+
+
+async def test_unsuppress_person_payload_structure(cio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+
+    await cio.v2.unsuppress_person(identifiers={"id": "user_42"})
+
+    request = httpx_mock.get_request()
+    body = json.loads(request.content)
+    assert body["type"] == "person"
+    assert body["action"] == "unsuppress"
+    assert body["identifiers"] == {"id": "user_42"}
+    assert "attributes" not in body
+    assert "name" not in body
+
+
+async def test_merge_persons_payload_structure(cio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+
+    await cio.v2.merge_persons(
+        primary={"id": "keep_this"},
+        secondary={"email": "merge_away@example.com"},
+    )
+
+    request = httpx_mock.get_request()
+    body = json.loads(request.content)
+    assert body["type"] == "person"
+    assert body["action"] == "merge"
+    assert body["primary"] == {"id": "keep_this"}
+    assert body["secondary"] == {"email": "merge_away@example.com"}
+    assert "identifiers" not in body
+    assert "cio_relationships" not in body
+
+
+async def test_add_person_relationships_payload_structure(cio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+
+    rels = [{"identifiers": {"object_type_id": "1", "object_id": "acme"}}]
+    await cio.v2.add_person_relationships(
+        identifiers={"id": "user_42"},
+        relationships=rels,
+    )
+
+    request = httpx_mock.get_request()
+    body = json.loads(request.content)
+    assert body["type"] == "person"
+    assert body["action"] == "add_relationships"
+    assert body["identifiers"] == {"id": "user_42"}
+    assert body["cio_relationships"] == rels
+
+
+async def test_delete_person_relationships_payload_structure(cio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+
+    rels = [{"identifiers": {"object_type_id": "1", "object_id": "acme"}}]
+    await cio.v2.delete_person_relationships(
+        identifiers={"id": "user_42"},
+        relationships=rels,
+    )
+
+    request = httpx_mock.get_request()
+    body = json.loads(request.content)
+    assert body["type"] == "person"
+    assert body["action"] == "delete_relationships"
+    assert body["identifiers"] == {"id": "user_42"}
+    assert body["cio_relationships"] == rels
+
+
+async def test_identify_object_payload_structure(cio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+
+    await cio.v2.identify_object(
+        identifiers={"object_type_id": "1", "object_id": "acme"},
+        name="Acme Corp",
+        industry="Software",
+    )
+
+    request = httpx_mock.get_request()
+    body = json.loads(request.content)
+    assert body["type"] == "object"
+    assert body["action"] == "identify"
+    assert body["identifiers"] == {"object_type_id": "1", "object_id": "acme"}
+    assert body["attributes"]["name"] == "Acme Corp"
+    assert body["attributes"]["industry"] == "Software"
+
+
+async def test_delete_object_payload_structure(cio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+
+    await cio.v2.delete_object(
+        identifiers={"object_type_id": "1", "object_id": "acme"},
+    )
+
+    request = httpx_mock.get_request()
+    body = json.loads(request.content)
+    assert body["type"] == "object"
+    assert body["action"] == "delete"
+    assert body["identifiers"] == {"object_type_id": "1", "object_id": "acme"}
+    assert "attributes" not in body
+
+
+async def test_track_object_event_payload_structure(cio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+
+    await cio.v2.track_object_event(
+        identifiers={"object_type_id": "1", "object_id": "acme"},
+        name="account_upgraded",
+        plan="enterprise",
+    )
+
+    request = httpx_mock.get_request()
+    body = json.loads(request.content)
+    assert body["type"] == "object"
+    assert body["action"] == "event"
+    assert body["identifiers"] == {"object_type_id": "1", "object_id": "acme"}
+    assert body["name"] == "account_upgraded"
+    assert body["attributes"]["plan"] == "enterprise"
+
+
+async def test_add_object_relationships_payload_structure(cio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+
+    rels = [{"identifiers": {"id": "person_1"}}]
+    await cio.v2.add_object_relationships(
+        identifiers={"object_type_id": "1", "object_id": "acme"},
+        relationships=rels,
+    )
+
+    request = httpx_mock.get_request()
+    body = json.loads(request.content)
+    assert body["type"] == "object"
+    assert body["action"] == "add_relationships"
+    assert body["identifiers"] == {"object_type_id": "1", "object_id": "acme"}
+    assert body["cio_relationships"] == rels
+
+
+async def test_delete_object_relationships_payload_structure(cio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+
+    rels = [{"identifiers": {"id": "person_1"}}]
+    await cio.v2.delete_object_relationships(
+        identifiers={"object_type_id": "1", "object_id": "acme"},
+        relationships=rels,
+    )
+
+    request = httpx_mock.get_request()
+    body = json.loads(request.content)
+    assert body["type"] == "object"
+    assert body["action"] == "delete_relationships"
+    assert body["identifiers"] == {"object_type_id": "1", "object_id": "acme"}
+    assert body["cio_relationships"] == rels
+
+
+async def test_send_batch_wraps_in_batch_key(cio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={})
+
+    items = [
+        {
+            "type": "person",
+            "action": Actions.identify.value,
+            "identifiers": {"id": 1},
+            "attributes": {"name": "John"},
+        },
+        {
+            "type": "object",
+            "action": Actions.identify.value,
+            "identifiers": {"object_type_id": "1", "object_id": "acme"},
+            "attributes": {"name": "Acme"},
+        },
+    ]
+
+    await cio.v2.send_batch(items)
+
+    request = httpx_mock.get_request()
+    body = json.loads(request.content)
+    assert body == {"batch": items}
+
+
+async def test_entity_request_url(cio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"success": True})
+
+    await cio.v2.identify_person(identifiers={"id": "user_1"}, name="Jane")
+
+    request = httpx_mock.get_request()
+    assert str(request.url).endswith("/api/v2/entity")
+
+
+async def test_batch_request_url(cio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={})
+
+    await cio.v2.send_batch([
+        {
+            "type": "person",
+            "action": Actions.identify.value,
+            "identifiers": {"id": 1},
+            "attributes": {"name": "John"},
+        }
+    ])
+
+    request = httpx_mock.get_request()
+    assert str(request.url).endswith("/api/v2/batch")

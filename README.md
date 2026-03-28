@@ -56,7 +56,7 @@ from async_customerio import AsyncCustomerIO, Regions
 async def main():
     async with AsyncCustomerIO(site_id="YOUR_SITE_ID", api_key="YOUR_API_KEY", region=Regions.US) as cio:
         await cio.identify(
-            id=5,
+            5,
             email="customer@example.com",
             first_name="John",
             last_name="Doe",
@@ -104,7 +104,7 @@ The same parameter is available on `AsyncAPIClient`.
 ```python
 async with AsyncCustomerIO(site_id="site", api_key="key", region=Regions.US) as cio:
     # Identify a customer
-    await cio.identify(id=5, email="customer@example.com", first_name="John")
+    await cio.identify(5, email="customer@example.com", first_name="John")
 
     # Track an event
     await cio.track(customer_id=5, name="product.purchased", product_sku="XYZ-12345", price=23.45)
@@ -232,14 +232,14 @@ from async_customerio import AsyncAPIClient, SendInboxMessageRequest, Regions
 
 
 async def main():
-    api = AsyncAPIClient(key="your-app-api-key", region=Regions.US)
-    request = SendInboxMessageRequest(
-        transactional_message_id="3",
-        identifiers={"id": "user_123"},
-        message_data={"name": "Jane", "order_id": "1234"},
-    )
-    response = await api.send_inbox_message(request)
-    print(response)
+    async with AsyncAPIClient(key="your-app-api-key", region=Regions.US) as api:
+        request = SendInboxMessageRequest(
+            transactional_message_id="3",
+            identifiers={"id": "user_123"},
+            message_data={"name": "Jane", "order_id": "1234"},
+        )
+        response = await api.send_inbox_message(request)
+        print(response)
 
 
 if __name__ == "__main__":
@@ -342,7 +342,7 @@ async def main():
         region=Regions.US,
         retry_strategy=retry,
     ) as cio:
-        await cio.identify(id=1, name="Jane")
+        await cio.identify(1, name="Jane")
 
 
 if __name__ == "__main__":
