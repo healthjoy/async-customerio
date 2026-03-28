@@ -460,8 +460,8 @@ async def test_delete_object_relationships_empty_relationships(cio):
 
 
 async def test_send_batch_success_200(cio, faker_, httpx_mock: HTTPXMock):
-    """200 — entire batch accepted."""
-    httpx_mock.add_response(status_code=200, json={"success": True})
+    """200 — entire batch accepted; API returns an empty object."""
+    httpx_mock.add_response(status_code=200, json={})
 
     payload = [
         {
@@ -473,7 +473,7 @@ async def test_send_batch_success_200(cio, faker_, httpx_mock: HTTPXMock):
     ]
 
     response = await cio.v2.send_batch(payload)
-    assert response is None
+    assert response == {}
 
 
 async def test_send_batch_partial_207(cio, faker_, httpx_mock: HTTPXMock):
@@ -508,7 +508,16 @@ async def test_send_batch_partial_207(cio, faker_, httpx_mock: HTTPXMock):
     ]
 
     response = await cio.v2.send_batch(payload)
-    assert response is None
+    assert response == {
+        "errors": [
+            {
+                "batch_index": 1,
+                "reason": "Invalid identifier: id cannot be null",
+                "field": "identifiers.id",
+                "message": "Invalid identifier: id cannot be null",
+            }
+        ]
+    }
 
 
 async def test_send_batch_malformed_400_raises(cio, faker_, httpx_mock: HTTPXMock):
@@ -541,7 +550,7 @@ async def test_send_batch_malformed_400_raises(cio, faker_, httpx_mock: HTTPXMoc
 
 async def test_send_batch_mixed_types(cio, faker_, httpx_mock: HTTPXMock):
     """Batch can mix person and object operations."""
-    httpx_mock.add_response(status_code=200, json={"success": True})
+    httpx_mock.add_response(status_code=200, json={})
 
     payload = [
         {
@@ -559,7 +568,7 @@ async def test_send_batch_mixed_types(cio, faker_, httpx_mock: HTTPXMock):
     ]
 
     response = await cio.v2.send_batch(payload)
-    assert response is None
+    assert response == {}
 
 
 # ======================================================================
@@ -650,7 +659,7 @@ async def test_legacy_send_entity_empty_identifier_raises(cio):
 
 async def test_legacy_send_batch(cio, faker_, httpx_mock: HTTPXMock):
     """cio.send_batch() still works via delegation to v2."""
-    httpx_mock.add_response(status_code=200, json={"success": True})
+    httpx_mock.add_response(status_code=200, json={})
 
     payload = [
         {
@@ -662,7 +671,7 @@ async def test_legacy_send_batch(cio, faker_, httpx_mock: HTTPXMock):
     ]
 
     response = await cio.send_batch(payload)
-    assert response is None
+    assert response == {}
 
 
 # ======================================================================

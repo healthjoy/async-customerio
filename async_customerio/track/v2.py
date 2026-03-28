@@ -111,7 +111,7 @@ class TrackAPIV2:
     # Batch
     # ------------------------------------------------------------------
 
-    async def send_batch(self, payload: t.List[EntityPayload]) -> None:
+    async def send_batch(self, payload: t.List[EntityPayload]) -> dict:
         """Send a batch of entity operations in a single request.
 
         Each item in *payload* represents an individual entity operation — it describes a
@@ -121,9 +121,10 @@ class TrackAPIV2:
         **32 KB** or smaller.
 
         :param payload: list of entity payloads.
-        :return: ``None`` if successful.  Otherwise raises ``AsyncCustomerIOError``.
+        :return: parsed JSON response body.  On **207 Multi-Status** the dict
+            contains per-item ``"errors"`` describing partial failures.
         """
-        await self._client.send_request(
+        return await self._client.send_request(
             "POST",
             join_url(self._base_url(), self.BATCH_ENDPOINT),
             json_payload={"batch": payload},

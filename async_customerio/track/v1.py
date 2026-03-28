@@ -390,13 +390,13 @@ class AsyncCustomerIO(AsyncClientBase):
             },
         )
 
-    async def send_batch(self, payload: t.List[EntityPayload]) -> None:
+    async def send_batch(self, payload: t.List[EntityPayload]) -> dict:
         """Send a batch of v2 entity operations.
 
         .. deprecated::
             Use ``cio.v2.send_batch(...)`` instead.
 
         :param payload: list of entity payloads.
-        :return: None if successful. Otherwise raises ``AsyncCustomerIOError``.
+        :return: parsed JSON response body.
         """
-        await self.v2.send_batch(payload)
+        return await self.v2.send_batch(payload)
