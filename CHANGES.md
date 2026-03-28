@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0
+
+- **Fix**: ``send_batch`` now returns the parsed JSON response body instead of ``None``.
+  On **200** the API returns an empty dict; on **207 Multi-Status** it returns per-item
+  ``"errors"`` (with ``batch_index``, ``reason``, ``field``, ``message``), allowing callers
+  to detect partial failures. Previously the 207 response was silently discarded. (#46)
+
+- Align ``send_batch`` test fixtures with the official Customer.io Batch API specification.
+
 ## 2.11.0
 
 - Add pluggable retry strategy via the new ``retry_strategy`` parameter on ``AsyncCustomerIO``,

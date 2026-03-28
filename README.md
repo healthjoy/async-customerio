@@ -216,7 +216,7 @@ async with AsyncCustomerIO(site_id="site", api_key="key") as cio:
 
 - All v2 methods validate required parameters and raise `AsyncCustomerIOError` for missing identifiers, names, etc.
 - The API enforces size limits: each item <= 32 KB, whole batch < 500 KB.
-- HTTP 200 and 207 are treated as success (methods return `None`). HTTP 400+ raises `AsyncCustomerIOError`.
+- `send_batch` returns the parsed JSON response body. On **200** the batch fully succeeded; on **207** the response contains per-item `"errors"` for partial failures. HTTP 400+ raises `AsyncCustomerIOError`.
 - The legacy `cio.send_entity()` and `cio.send_batch()` methods still work for backwards compatibility but delegate to the `.v2` class internally.
 
 ## App API
