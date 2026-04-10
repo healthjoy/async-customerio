@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.13.1
+
+- **Security**: Bump ``cryptography`` from 46.0.6 to 46.0.7 to address upstream security fixes. (#50)
+
 ## 2.13.0
 
 ### Bug Fixes
