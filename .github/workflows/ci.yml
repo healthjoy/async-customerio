@@ -21,7 +21,7 @@ on:
 env:
   POETRY_VERSION: 2.2.1
   LINT_PYTHON_VERSION: '3.11'
-  CACHE_VERSION: v1
+  CACHE_VERSION: v2
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -57,7 +57,7 @@ jobs:
 
       - name: Install Dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction -vv
+        run: poetry install --extras dev --no-interaction -vv
 
       - name: Log currently installed packages and versions
         run: poetry show
@@ -91,7 +91,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction
+        run: poetry install --extras dev --no-interaction
 
       - name: Ruff lint
         run: poetry run ruff check async_customerio
@@ -128,7 +128,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction
+        run: poetry install --extras dev --no-interaction
 
       - name: Static type checker
         run: |
@@ -168,7 +168,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction
+        run: poetry install --extras dev --no-interaction
 
       - name: Run pytest
         run: |
