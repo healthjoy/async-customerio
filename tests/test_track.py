@@ -242,11 +242,10 @@ def test_backfill_invalid_timestamp_raises():
     client = AsyncCustomerIO("site", "key")
     with pytest.raises(AsyncCustomerIOError):
         # pass a non-int, non-datetime timestamp
-        pytest.raises(AsyncCustomerIOError)
         # call is synchronous up to validation so no network needed
         import asyncio
 
-        asyncio.get_event_loop().run_until_complete(client.backfill("123", "name", "not-a-timestamp"))
+        asyncio.run(client.backfill("123", "name", "not-a-timestamp"))
 
 
 async def test_identify_request_url_and_method(fake_async_customerio, httpx_mock: HTTPXMock):
