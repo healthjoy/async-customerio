@@ -1107,4 +1107,4 @@ dev = ["Faker", "cryptography", "mypy", "pre-commit", "pytest", "pytest-asyncio"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.15"
-content-hash = "f356ef9678f00e8cd4b2e4740db18cf77a8ecd4de068ec7f92f0b36ff995e0d0"
+content-hash = "3ed8fd043c3f6479d06f6650c4cc6bcd49555453a56cd4c8699a8c7d6cf46a71"
