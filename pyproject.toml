@@ -47,7 +47,7 @@ dev = [
     "pytest-freezegun~=0.4.2",
     "pytest-httpx~=0.35",
     "ruff>=0.9.6",
-    "mypy>=1.15,<1.21",
+    "mypy>=1.15,<2.2",
 ]
 
 [tool.pytest.ini_options]
