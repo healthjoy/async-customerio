@@ -18,58 +18,48 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-env:
-  UV_VERSION: "0.11.28"
-  LINT_PYTHON_VERSION: '3.11'
-
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   linters-ruff:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: source code
         uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v9.0.0
         with:
-          version: ${{ env.UV_VERSION }}
+          python-version: '3.13'
           enable-cache: true
-          python-version: ${{ env.LINT_PYTHON_VERSION }}
 
       - name: Install dependencies
         run: uv sync --locked
 
-      - name: Ruff lint
-        run: uv run ruff check async_customerio
-
-      - name: Ruff format
-        run: uv run ruff format --check async_customerio
+      - name: Check code style
+        run: uv run ruff check async_customerio && uv run ruff format --check async_customerio
 
   linters-mypy:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: source code
         uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v9.0.0
         with:
-          version: ${{ env.UV_VERSION }}
+          python-version: '3.13'
           enable-cache: true
-          python-version: ${{ env.LINT_PYTHON_VERSION }}
 
       - name: Install dependencies
         run: uv sync --locked
 
       - name: Static type checker
-        run: uv run --with types-setuptools mypy --install-types --no-error-summary --hide-error-codes --follow-imports=skip async_customerio
+        run: uv run --with types-setuptools mypy --install-types --non-interactive --no-error-summary --hide-error-codes --follow-imports=skip async_customerio
 
   test:
     needs: [ linters-ruff, linters-mypy ]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
         python-version: [ '3.10', '3.11', '3.12', '3.13', '3.14' ]
     steps:
@@ -77,11 +67,10 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v9.0.0
         with:
-          version: ${{ env.UV_VERSION }}
-          enable-cache: true
           python-version: ${{ matrix.python-version }}
+          enable-cache: true
 
       - name: Install dependencies
         run: uv sync --locked
@@ -91,8 +80,7 @@ jobs:
 
       - name: Submit coverage report
         if: github.ref == 'refs/heads/master'
-        env:
-          CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_TOKEN }}
-        run: |
-          pip install codacy-coverage
-          python-codacy-coverage -r coverage.xml
+        uses: codacy/codacy-coverage-reporter-action@v1
+        with:
+          project-token: ${{ secrets.CODACY_TOKEN }}
+          coverage-reports: coverage.xml
