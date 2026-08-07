@@ -24,11 +24,11 @@ Auth and integration points
 - Region selection is modeled with `async_customerio/regions.py` (`Regions.US` and `Regions.EU`) — agents should keep region-aware host selection when editing URL construction.
 
 Developer workflows (commands discovered from repository files)
-- Dependency & environment (this repo uses Poetry as the build tool):
-  - Install: `poetry install`
-  - Run tests: `poetry run pytest` (or `pytest` after installing dev dependencies)
-  - Typecheck: `poetry run mypy`
-  - Formatting: `poetry run black .` and `poetry run isort .`
+- Dependency & environment (this repo uses uv for dependency management and hatchling as the build backend):
+  - Install: `uv sync` (adds the `dev` dependency group; use `uv sync --no-dev` for runtime only)
+  - Run tests: `uv run pytest`
+  - Typecheck: `uv run mypy async_customerio`
+  - Lint & format: `uv run ruff check async_customerio` and `uv run ruff format async_customerio`
 - Tests use `pytest`, `pytest-asyncio`, and `pytest-httpx`. See `pyproject.toml` for pinned dev dependencies.
 
 Project-specific patterns and conventions
