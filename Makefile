@@ -36,20 +36,20 @@ help:
 .PHONY: install
 install:
 	@echo "$(BOLD)Installing package$(RESET)"
-	@poetry config virtualenvs.create false
-	@poetry install --only main
+	@uv sync --no-dev
 	@echo "$(BOLD)Done!$(RESET)"
 
 .PHONY: update
 update:
 	@echo "$(BOLD)Updating package and dependencies$(RESET)"
-	@poetry update
+	@uv lock --upgrade
+	@uv sync
 	@echo "$(BOLD)Done!$(RESET)"
 
 .PHONY: setup_dev
 setup_dev:
 	@echo "$(BOLD)DEV setup$(RESET)"
-	@poetry install --extras dev
+	@uv sync
 	@echo "$(BOLD)Done!$(RESET)"
 
 .PHONY: clean
@@ -61,13 +61,13 @@ clean:
 .PHONY: test
 test: setup_dev
 	@echo "$(BOLD)Running tests$(RESET)"
-	@poetry run pytest --maxfail=2 ${ARGS}
+	@uv run pytest --maxfail=2 ${ARGS}
 	@echo "$(BOLD)Done!$(RESET)"
 
 .PHONY: mypy
 mypy: setup_dev
 	@echo "$(BOLD)Running static type checker (mypy)$(RESET)"
-	@poetry run mypy --no-error-summary --hide-error-codes --follow-imports=skip async_customerio
+	@uv run mypy --no-error-summary --hide-error-codes --follow-imports=skip async_customerio
 	@echo "$(BOLD)Done!$(RESET)"
 
 .PHONY: install_pre_commit
