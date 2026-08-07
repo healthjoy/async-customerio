@@ -50,7 +50,7 @@ dev = [
     "pytest-cov>=6.1.1,<7.2.0",
     "pytest-httpx~=0.35",
     "ruff>=0.9.6",
-    "mypy>=1.15,<1.21",
+    "mypy>=1.15,<2.3",
 ]
 
 [tool.pytest.ini_options]
