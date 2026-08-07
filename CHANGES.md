@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.13.2
+
+### Bug Fixes
+
+- **Fix**: ``retry.py`` imported ``Protocol`` and ``runtime_checkable`` from ``typing_extensions``,
+  which was never declared as a dependency. Installing the package into an environment that did not
+  provide ``typing_extensions`` transitively raised ``ModuleNotFoundError`` on import. Both names are
+  now imported from the standard library ``typing`` module. (#61)
+
+### Maintenance
+
+- **Chore**: Migrate dependency management from Poetry to [uv](https://docs.astral.sh/uv/). The ``dev``
+  extra moved to a PEP 735 dependency group, so ``pip install async-customerio[dev]`` is no longer
+  available; contributors should use ``uv sync``. This does not affect runtime dependencies. (#61)
+
+- **Chore**: Publish to PyPI via Trusted Publishing (OIDC) instead of a long-lived API token. (#61)
+
 ## 2.13.1
 
 - **Security**: Bump ``cryptography`` from 46.0.6 to 46.0.7 to address upstream security fixes. (#50)
