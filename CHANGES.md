@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.14.0
+
+### Features
+
+- **Feature**: Add App API support for the ``Transactional`` category, available via
+  ``AsyncAPIClient.transactional``. Covers all nine endpoints: ``list()``, ``get()``,
+  ``list_variants()``, ``update_content()``, ``get_variant()``, ``update_variant()``,
+  ``get_metrics()``, ``get_link_metrics()``, and ``get_deliveries()``. The two update
+  methods take explicit keyword arguments and omit any field left as ``None``, so a
+  partial update does not blank out existing content.
+
 ## 2.13.2
 
 ### Bug Fixes

@@ -14,6 +14,7 @@ from async_customerio.utils import join_url
 from .customers import Customers
 from .segments import Segments
 from .send import SendEmailRequest, SendInboxMessageRequest, SendPushRequest, SendSMSRequest
+from .transactional import Transactional
 
 
 class HasToDict(Protocol):
@@ -76,6 +77,19 @@ class AsyncAPIClient(AsyncClientBase):
         if not hasattr(self, "_segments"):
             self._segments = Segments(self)
         return self._segments
+
+    @property
+    def transactional(self) -> Transactional:
+        """Access transactional message API methods.
+
+        Usage::
+
+            async with AsyncAPIClient(key="...") as client:
+                result = await client.transactional.list()
+        """
+        if not hasattr(self, "_transactional"):
+            self._transactional = Transactional(self)
+        return self._transactional
 
     def _build_url(self, endpoint: str) -> str:
         """Build a full URL for the given endpoint path."""
