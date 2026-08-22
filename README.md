@@ -23,7 +23,7 @@
 - Async context manager support for clean resource management
 - Compatible interface with the official [customerio](https://github.com/customerio/customerio-python) Python client
 - Track API v1 & v2 (persons, objects, relationships, batch operations)
-- App API support (customers, segments, send messages)
+- App API support (customers, segments, transactional messages, send messages)
 - Pluggable retry strategy via the `RetryStrategy` protocol
 - Webhook signature verification
 
@@ -298,6 +298,38 @@ async with AsyncAPIClient(key="your-app-api-key") as client:
     await client.segments.delete(segment_id=1)
 ```
 
+### Transactional
+
+```python
+async with AsyncAPIClient(key="your-app-api-key") as client:
+    # List transactional messages and look one up
+    result = await client.transactional.list()
+    message = await client.transactional.get(transactional_id=3)
+
+    # List the content variants (one per language)
+    variants = await client.transactional.list_variants(transactional_id=3)
+
+    # Update a content variant — omitted fields are left untouched
+    await client.transactional.update_content(
+        3,
+        139,
+        subject="Reset your password",
+        body="<html>...</html>",
+        from_id=1,
+    )
+
+    # Read and update a translation
+    fr = await client.transactional.get_variant(3, "fr")
+    await client.transactional.update_variant(3, "fr", subject="Bonjour")
+
+    # Metrics, in series from oldest to newest
+    metrics = await client.transactional.get_metrics(3, period="weeks", steps=12)
+    links = await client.transactional.get_link_metrics(3, unique=True)
+
+    # Deliveries sent from this transactional message
+    deliveries = await client.transactional.get_deliveries(3, metric="delivered", limit=50)
+```
+
 ## Custom Retry Strategy
 
 By default the library does **not** retry failed requests — it raises
@@ -392,14 +424,14 @@ else:
 </details>
 
 <details>
-<summary><strong>App API</strong> — 21 of 131 endpoints implemented</summary>
+<summary><strong>App API</strong> — 30 of 131 endpoints implemented</summary>
 
 | Category | Endpoints | Status |
 |---|---|---|
 | Customers | 9 | Implemented |
 | Segments | 7 | Implemented |
 | Send Messages | 5 | Implemented |
-| Transactional | 9 | Not yet |
+| Transactional | 9 | Implemented |
 | Campaigns | 13 | Not yet |
 | Broadcasts | 15 | Not yet |
 | Newsletters | 16 | Not yet |
