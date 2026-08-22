@@ -1,6 +1,9 @@
 [run]
-source =
-    ./async_customerio
+# Keep the repo root as the coverage source root so paths in coverage.xml stay
+# repo-relative (async_customerio/...) and external tools can map them to files.
+source = .
+include =
+    async_customerio/*
 omit =
     # omit tests
     */tests/*
