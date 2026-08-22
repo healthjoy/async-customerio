@@ -11,6 +11,11 @@ on:
       - "v[0-9]+.[0-9]+.x"
     paths:
       - "**.py"
+      # Coverage plumbing: changes here alter the report Codacy consumes, so CI
+      # must run to publish it even when no Python source changed.
+      - ".coveragerc"
+      - "pyproject.toml"
+      - ".github/workflows/ci.yml"
   pull_request:
     branches:
       - "master"
@@ -79,7 +84,7 @@ jobs:
         run: uv run pytest tests/
 
       - name: Submit coverage report
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master' && matrix.python-version == '3.13'
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
           project-token: ${{ secrets.CODACY_TOKEN }}
