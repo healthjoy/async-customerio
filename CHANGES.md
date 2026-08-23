@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.15.0
+
+### Features
+
+- **Feature**: Add support for sending transactional in-app messages via
+  ``AsyncAPIClient.send_in_app()`` and the new ``SendInAppRequest`` object, which targets the
+  ``POST /v1/send/in_app`` endpoint. In-app messages render in your application through the
+  Customer.io SDK to the devices associated with the person you target by ``identifiers``; the
+  workspace must have in-app messaging enabled, otherwise the API responds with ``403``.
+
 ## 2.14.0
 
 ### Features

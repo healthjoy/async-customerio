@@ -9,6 +9,7 @@ from async_customerio import (
     AsyncCustomerIOError,
     AsyncCustomerIORetryableError,
     SendEmailRequest,
+    SendInAppRequest,
     SendInboxMessageRequest,
     SendPushRequest,
     SendSMSRequest,
@@ -190,6 +191,37 @@ async def test_send_inbox_message(send_inbox_message_request, fake_async_api_cli
 async def test_send_inbox_message_invalid_request(invalid_request, fake_async_api_client):
     with pytest.raises(AsyncCustomerIOError, match="invalid request provided"):
         await fake_async_api_client.send_inbox_message(invalid_request)
+
+
+@pytest.mark.parametrize(
+    "send_in_app_request", (
+        SendInAppRequest(transactional_message_id="order_confirmation", identifiers={"id": "user_123"}),
+        SendInAppRequest(transactional_message_id=44, identifiers={"email": "test@example.com"}),
+        SendInAppRequest(
+            transactional_message_id="order_confirmation",
+            identifiers={"cio_id": "3000001"},
+            message_data={
+                "order_id": "ORD-5678",
+                "tracking_url": "https://track.example.com/5678",
+            },
+        ),
+    )
+)
+async def test_send_in_app(send_in_app_request, fake_async_api_client, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"delivery_id": "abc123"})
+    response = await fake_async_api_client.send_in_app(send_in_app_request)
+    assert response
+
+
+@pytest.mark.parametrize(
+    "invalid_request", (
+        {"transactional_message_id": "3", "identifiers": {"id": "2"}},
+        FakeSendRequest("john@doh.com", "billy@jean.com", "Whiskey"),
+    )
+)
+async def test_send_in_app_invalid_request(invalid_request, fake_async_api_client):
+    with pytest.raises(AsyncCustomerIOError, match="invalid request provided"):
+        await fake_async_api_client.send_in_app(invalid_request)
 
 
 async def test_send_email_request_to_dict_full():
@@ -394,6 +426,42 @@ async def test_send_inbox_message_request_to_dict():
     assert result["language"] == "fr"
 
 
+async def test_send_in_app_request_to_dict():
+    req = SendInAppRequest(
+        transactional_message_id="order_confirmation",
+        identifiers={"id": "user_123"},
+        message_data={"order_id": "ORD-5678"},
+        send_at=1700000000,
+        queue_draft=True,
+        language="fr",
+        auto_create=True,
+    )
+    result = req.to_dict()
+
+    assert result["transactional_message_id"] == "order_confirmation"
+    assert result["identifiers"] == {"id": "user_123"}
+    assert result["message_data"] == {"order_id": "ORD-5678"}
+    assert result["send_at"] == 1700000000
+    assert result["queue_draft"] is True
+    assert result["language"] == "fr"
+    assert result["auto_create"] is True
+
+
+async def test_send_in_app_request_to_dict_omits_unset_fields():
+    req = SendInAppRequest(transactional_message_id=44, identifiers={"email": "test@example.com"})
+    result = req.to_dict()
+
+    assert result == {
+        "transactional_message_id": 44,
+        "identifiers": {"email": "test@example.com"},
+        "queue_draft": False,
+        "auto_create": False,
+    }
+    # the in-app endpoint has no `disable_message_retention` or `to` field
+    assert "disable_message_retention" not in result
+    assert "to" not in result
+
+
 async def test_send_email_request_url_and_method(fake_async_api_client, httpx_mock: HTTPXMock):
     httpx_mock.add_response(status_code=200, json={"success": True})
     await fake_async_api_client.send_email(
@@ -432,6 +500,16 @@ async def test_send_inbox_message_request_url_and_method(fake_async_api_client, 
     request = httpx_mock.get_request()
     assert request.method == "POST"
     assert request.url.path == "/v1/send/inbox_message"
+
+
+async def test_send_in_app_request_url_and_method(fake_async_api_client, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"delivery_id": "abc123"})
+    await fake_async_api_client.send_in_app(
+        SendInAppRequest(transactional_message_id="1", identifiers={"id": "2"})
+    )
+    request = httpx_mock.get_request()
+    assert request.method == "POST"
+    assert request.url.path == "/v1/send/in_app"
 
 
 async def test_auth_header_uses_bearer_token(httpx_mock: HTTPXMock):

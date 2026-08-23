@@ -13,7 +13,7 @@ from async_customerio.utils import join_url
 
 from .customers import Customers
 from .segments import Segments
-from .send import SendEmailRequest, SendInboxMessageRequest, SendPushRequest, SendSMSRequest
+from .send import SendEmailRequest, SendInAppRequest, SendInboxMessageRequest, SendPushRequest, SendSMSRequest
 from .transactional import Transactional
 
 
@@ -27,6 +27,7 @@ class AsyncAPIClient(AsyncClientBase):
     SEND_PUSH_NOTIFICATION_ENDPOINT = "/send/push"
     SEND_SMS_ENDPOINT = "/send/sms"
     SEND_INBOX_MESSAGE_ENDPOINT = "/send/inbox_message"
+    SEND_IN_APP_ENDPOINT = "/send/in_app"
 
     def __init__(
         self,
@@ -154,3 +155,9 @@ class AsyncAPIClient(AsyncClientBase):
             raise AsyncCustomerIOError("invalid request provided")
 
         return await self._request("POST", self.SEND_INBOX_MESSAGE_ENDPOINT, json_payload=request.to_dict())
+
+    async def send_in_app(self, request: SendInAppRequest) -> dict:
+        if not hasattr(request, "to_dict"):
+            raise AsyncCustomerIOError("invalid request provided")
+
+        return await self._request("POST", self.SEND_IN_APP_ENDPOINT, json_payload=request.to_dict())

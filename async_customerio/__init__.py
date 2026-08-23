@@ -4,6 +4,7 @@ from async_customerio._config import RequestLimits, RequestTimeout  # noqa
 from async_customerio.api import (  # noqa
     AsyncAPIClient,
     SendEmailRequest,
+    SendInAppRequest,
     SendInboxMessageRequest,
     SendPushRequest,
     SendSMSRequest,
