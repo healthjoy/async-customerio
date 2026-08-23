@@ -8,6 +8,7 @@ from async_customerio.api._client import AsyncAPIClient
 from async_customerio.api.send import (
     CustomDevice,
     SendEmailRequest,
+    SendInAppRequest,
     SendInboxMessageRequest,
     SendPushRequest,
     SendSMSRequest,
@@ -18,6 +19,7 @@ __all__ = [
     "AsyncAPIClient",
     "CustomDevice",
     "SendEmailRequest",
+    "SendInAppRequest",
     "SendInboxMessageRequest",
     "SendPushRequest",
     "SendSMSRequest",

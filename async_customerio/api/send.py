@@ -256,6 +256,63 @@ class SendSMSRequest:
         return to_dict(field_map=field_map, instance=self)
 
 
+class SendInAppRequest:
+    """An object with all the options available for triggering a transactional in-app message."""
+
+    def __init__(
+        self,
+        transactional_message_id: Optional[Union[str, int]] = None,
+        identifiers: Optional[Union[IdentifierID, IdentifierEMAIL, IdentifierCIOID]] = None,
+        message_data: Optional[dict] = None,
+        send_at: Optional[int] = None,
+        queue_draft: bool = False,
+        language: Optional[str] = None,
+        auto_create: bool = False,
+    ) -> None:
+        """Constructor of the in-app message object that is sent along with the request.
+
+        In-app messages render in your application through the Customer.io SDK to the devices
+        associated with the person you target by ``identifiers``. The workspace must have in-app
+        messaging enabled, otherwise the API responds with ``403``.
+
+        :param transactional_message_id: The transactional message template that you want to use for your message.
+            Either the numerical ID or the *Trigger Name* assigned to the template (case insensitive).
+        :param identifiers: Identifies the person represented by your transactional message by one of, and only one of,
+            ``IdentifierID``, ``IdentifierEMAIL``, ``IdentifierCIOID``.
+        :param message_data: A dictionary containing the key-value pairs referenced using **liquid** in the format
+            ``{{trigger.<property_name>}}`` in your in-app message. These values populate the ``properties`` field in
+            the message that the SDK delivers to your application.
+        :param send_at: A unix timestamp (seconds since epoch) determining when the message will be sent. The timestamp
+            can be up to 90 days in the future. If this value is in the past, your message is sent immediately.
+        :param queue_draft: If true, your transactional message is held as a draft in Customer.io and not sent directly
+            to your audience. Default is set to ``False``.
+        :param language: Overrides language preferences for the person you want to send your transactional message to.
+        :param auto_create: If true, an in-app message record is created when ``transactional_message_id`` is a new
+            string. An auto-created record has no content or layout until you populate it in the user interface, so
+            creating the in-app message in the user interface is recommended instead. Default is set to ``False``.
+        """
+        self.transactional_message_id = transactional_message_id
+        self.identifiers = identifiers
+        self.message_data = message_data
+        self.send_at = send_at
+        self.queue_draft = queue_draft
+        self.language = language
+        self.auto_create = auto_create
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Build a request payload from the object."""
+        field_map = dict(
+            transactional_message_id="transactional_message_id",
+            identifiers="identifiers",
+            message_data="message_data",
+            send_at="send_at",
+            queue_draft="queue_draft",
+            language="language",
+            auto_create="auto_create",
+        )
+        return to_dict(field_map=field_map, instance=self)
+
+
 class SendInboxMessageRequest:
     """An object with all the options available for triggering a transactional inbox message."""
 

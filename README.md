@@ -246,6 +246,24 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
+In-app messages render in your application through the Customer.io SDK to the devices associated
+with the person you target by `identifiers`. Your workspace must have in-app messaging enabled,
+otherwise the API responds with `403`.
+
+```python
+from async_customerio import AsyncAPIClient, SendInAppRequest, Regions
+
+
+async with AsyncAPIClient(key="your-app-api-key", region=Regions.US) as api:
+    request = SendInAppRequest(
+        transactional_message_id="order_confirmation",
+        identifiers={"id": "user_123"},
+        message_data={"order_id": "ORD-5678", "tracking_url": "https://track.example.com/5678"},
+    )
+    response = await api.send_in_app(request)
+    print(response["delivery_id"])
+```
+
 ### Customers
 
 Customer endpoints are accessed via the `.customers` namespace:
