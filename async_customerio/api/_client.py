@@ -13,7 +13,14 @@ from async_customerio.utils import join_url
 
 from .customers import Customers
 from .segments import Segments
-from .send import SendEmailRequest, SendInAppRequest, SendInboxMessageRequest, SendPushRequest, SendSMSRequest
+from .send import (
+    SendEmailRequest,
+    SendInAppRequest,
+    SendInboxMessageRequest,
+    SendPushRequest,
+    SendSMSRequest,
+    SendWhatsAppRequest,
+)
 from .transactional import Transactional
 
 
@@ -26,6 +33,7 @@ class AsyncAPIClient(AsyncClientBase):
     SEND_EMAIL_ENDPOINT = "/send/email"
     SEND_PUSH_NOTIFICATION_ENDPOINT = "/send/push"
     SEND_SMS_ENDPOINT = "/send/sms"
+    SEND_WHATSAPP_ENDPOINT = "/send/whatsapp"
     SEND_INBOX_MESSAGE_ENDPOINT = "/send/inbox_message"
     SEND_IN_APP_ENDPOINT = "/send/in_app"
 
@@ -149,6 +157,12 @@ class AsyncAPIClient(AsyncClientBase):
             raise AsyncCustomerIOError("invalid request provided")
 
         return await self._request("POST", self.SEND_SMS_ENDPOINT, json_payload=request.to_dict())
+
+    async def send_whatsapp(self, request: SendWhatsAppRequest) -> dict:
+        if not hasattr(request, "to_dict"):
+            raise AsyncCustomerIOError("invalid request provided")
+
+        return await self._request("POST", self.SEND_WHATSAPP_ENDPOINT, json_payload=request.to_dict())
 
     async def send_inbox_message(self, request: SendInboxMessageRequest) -> dict:
         if not hasattr(request, "to_dict"):

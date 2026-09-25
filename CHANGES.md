@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.16.0
+
+### Features
+
+- **Feature**: Add support for sending transactional WhatsApp messages via
+  ``AsyncAPIClient.send_whatsapp()`` and the new ``SendWhatsAppRequest`` object, which targets the
+  ``POST /v1/send/whatsapp`` endpoint. Requires a WhatsApp Business integration (not Twilio) and a
+  template approved by WhatsApp/Meta. Unlike the official Python client, the optional ``from`` sender
+  override is supported (as ``_from``). ``tracked`` is omitted unless set, so the template's own
+  link-tracking setting applies by default.
+
 ## 2.15.0
 
 ### Features

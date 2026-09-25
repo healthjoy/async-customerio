@@ -2,7 +2,7 @@
 Transactional message request objects for the Customer.io App API.
 
 Each class represents a request payload for sending a specific type of transactional message
-(email, push, SMS, or inbox message).
+(email, push, SMS, WhatsApp, in-app, or inbox message).
 """
 
 import base64
@@ -246,6 +246,82 @@ class SendSMSRequest:
             transactional_message_id="transactional_message_id",
             to="to",
             identifiers="identifiers",
+            disable_message_retention="disable_message_retention",
+            send_to_unsubscribed="send_to_unsubscribed",
+            queue_draft="queue_draft",
+            message_data="message_data",
+            send_at="send_at",
+            language="language",
+        )
+        return to_dict(field_map=field_map, instance=self)
+
+
+class SendWhatsAppRequest:
+    """An object with all the options available for triggering a transactional WhatsApp message."""
+
+    def __init__(
+        self,
+        transactional_message_id: Optional[Union[str, int]] = None,
+        to: Optional[str] = None,
+        identifiers: Optional[Union[IdentifierID, IdentifierEMAIL, IdentifierCIOID]] = None,
+        _from: Optional[str] = None,
+        tracked: Optional[bool] = None,
+        language: Optional[str] = None,
+        message_data: Optional[dict] = None,
+        send_at: Optional[int] = None,
+        disable_message_retention: bool = False,
+        send_to_unsubscribed: bool = True,
+        queue_draft: bool = False,
+    ) -> None:
+        """Constructor of the WhatsApp message object that is sent along with the request.
+
+        Requires a WhatsApp Business integration (not Twilio), and the template referenced by
+        ``transactional_message_id`` must be approved by WhatsApp/Meta before it can be sent.
+
+        :param transactional_message_id: The transactional message template that you want to use for your message.
+            Either the numerical ID or the *Trigger Name* assigned to the template (case insensitive).
+        :param to: The WhatsApp phone number you want to send your message to, in E.164 format
+            (e.g., +15551234567), or Liquid if you store phone numbers as attributes.
+        :param identifiers: Identifies the person represented by your transactional message by one of, and only one of,
+            ``IdentifierID``, ``IdentifierEMAIL``, ``IdentifierCIOID``.
+        :param _from: The WhatsApp-approved sender (phone number or sender ID) configured in your workspace. This
+            overrides the sender set within the transactional template. Phone numbers must be in E.164 format.
+        :param tracked: Whether to track link clicks for this message. When left as ``None`` the template's own
+            tracking setting applies.
+        :param language: Overrides language preferences for the person you want to send your transactional message to.
+        :param message_data: A dictionary containing the key-value pairs referenced using **liquid** in your message.
+        :param send_at: A unix timestamp (seconds since epoch) determining when the message will be sent. The timestamp
+            can be up to 90 days in the future. If this value is in the past, your message is sent immediately.
+        :param disable_message_retention: If true, the message body is not retained in delivery history. Default is set
+            to ``False``.
+        :param send_to_unsubscribed: If false, your message is not sent to unsubscribed recipients. Default is set to
+            ``True``.
+        :param queue_draft: If true, your transactional message is held as a draft in Customer.io and not sent directly
+            to your audience. Default is set to ``False``.
+        """
+        self.transactional_message_id = transactional_message_id
+        self.to = to
+        self.identifiers = identifiers
+        self._from = _from
+        self.tracked = tracked
+        self.language = language
+        self.message_data = message_data
+        self.send_at = send_at
+        self.disable_message_retention = disable_message_retention
+        self.send_to_unsubscribed = send_to_unsubscribed
+        self.queue_draft = queue_draft
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Build a request payload from the object."""
+        field_map = dict(
+            # `from` is reserved keyword hence the object has the field
+            # `_from` but in the request payload we map it to `from`
+            _from="from",
+            # field name is the same as the payload field name
+            transactional_message_id="transactional_message_id",
+            to="to",
+            identifiers="identifiers",
+            tracked="tracked",
             disable_message_retention="disable_message_retention",
             send_to_unsubscribed="send_to_unsubscribed",
             queue_draft="queue_draft",

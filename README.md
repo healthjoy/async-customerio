@@ -264,6 +264,24 @@ async with AsyncAPIClient(key="your-app-api-key", region=Regions.US) as api:
     print(response["delivery_id"])
 ```
 
+WhatsApp messages require a WhatsApp Business integration (not Twilio), and the template must be
+approved by WhatsApp/Meta before you can send it. Pass the recipient's number in E.164 format.
+
+```python
+from async_customerio import AsyncAPIClient, SendWhatsAppRequest, Regions
+
+
+async with AsyncAPIClient(key="your-app-api-key", region=Regions.US) as api:
+    request = SendWhatsAppRequest(
+        transactional_message_id="3",
+        to="+15551234567",
+        identifiers={"id": "2"},
+        message_data={"name": "person"},
+    )
+    response = await api.send_whatsapp(request)
+    print(response["delivery_id"])
+```
+
 ### Customers
 
 Customer endpoints are accessed via the `.customers` namespace:

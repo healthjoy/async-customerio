@@ -13,6 +13,7 @@ from async_customerio import (
     SendInboxMessageRequest,
     SendPushRequest,
     SendSMSRequest,
+    SendWhatsAppRequest,
 )
 
 pytestmark = pytest.mark.asyncio
@@ -222,6 +223,35 @@ async def test_send_in_app(send_in_app_request, fake_async_api_client, httpx_moc
 async def test_send_in_app_invalid_request(invalid_request, fake_async_api_client):
     with pytest.raises(AsyncCustomerIOError, match="invalid request provided"):
         await fake_async_api_client.send_in_app(invalid_request)
+
+
+@pytest.mark.parametrize(
+    "send_whatsapp_request", (
+        SendWhatsAppRequest(transactional_message_id="3", to="+15551234567", identifiers={"id": "2"}),
+        SendWhatsAppRequest(transactional_message_id=44, to="+15551234567", identifiers={"email": "test@example.com"}),
+        SendWhatsAppRequest(
+            transactional_message_id="order_shipped",
+            to="+15551234567",
+            identifiers={"cio_id": "3000001"},
+            message_data={"name": "person"},
+        ),
+    )
+)
+async def test_send_whatsapp(send_whatsapp_request, fake_async_api_client, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"delivery_id": "abc123"})
+    response = await fake_async_api_client.send_whatsapp(send_whatsapp_request)
+    assert response
+
+
+@pytest.mark.parametrize(
+    "invalid_request", (
+        {"transactional_message_id": "3", "to": "+15551234567", "identifiers": {"id": "2"}},
+        FakeSendRequest("john@doh.com", "billy@jean.com", "Whiskey"),
+    )
+)
+async def test_send_whatsapp_invalid_request(invalid_request, fake_async_api_client):
+    with pytest.raises(AsyncCustomerIOError, match="invalid request provided"):
+        await fake_async_api_client.send_whatsapp(invalid_request)
 
 
 async def test_send_email_request_to_dict_full():
@@ -462,6 +492,52 @@ async def test_send_in_app_request_to_dict_omits_unset_fields():
     assert "to" not in result
 
 
+async def test_send_whatsapp_request_to_dict():
+    req = SendWhatsAppRequest(
+        transactional_message_id="order_shipped",
+        to="+15551234567",
+        identifiers={"id": "user_123"},
+        _from="+15557654321",
+        tracked=False,
+        disable_message_retention=True,
+        send_to_unsubscribed=False,
+        queue_draft=True,
+        message_data={"name": "person"},
+        send_at=1700000000,
+        language="fr",
+    )
+    result = req.to_dict()
+
+    assert result["transactional_message_id"] == "order_shipped"
+    assert result["to"] == "+15551234567"
+    assert result["identifiers"] == {"id": "user_123"}
+    assert result["from"] == "+15557654321"
+    assert "_from" not in result
+    assert result["tracked"] is False
+    assert result["disable_message_retention"] is True
+    assert result["send_to_unsubscribed"] is False
+    assert result["queue_draft"] is True
+    assert result["message_data"] == {"name": "person"}
+    assert result["send_at"] == 1700000000
+    assert result["language"] == "fr"
+
+
+async def test_send_whatsapp_request_to_dict_omits_unset_fields():
+    req = SendWhatsAppRequest(transactional_message_id=44, to="+15551234567", identifiers={"id": "2"})
+    result = req.to_dict()
+
+    assert result == {
+        "transactional_message_id": 44,
+        "to": "+15551234567",
+        "identifiers": {"id": "2"},
+        "disable_message_retention": False,
+        "send_to_unsubscribed": True,
+        "queue_draft": False,
+    }
+    # an unset `tracked` must be omitted so the template's own link-tracking setting applies
+    assert "tracked" not in result
+
+
 async def test_send_email_request_url_and_method(fake_async_api_client, httpx_mock: HTTPXMock):
     httpx_mock.add_response(status_code=200, json={"success": True})
     await fake_async_api_client.send_email(
@@ -510,6 +586,16 @@ async def test_send_in_app_request_url_and_method(fake_async_api_client, httpx_m
     request = httpx_mock.get_request()
     assert request.method == "POST"
     assert request.url.path == "/v1/send/in_app"
+
+
+async def test_send_whatsapp_request_url_and_method(fake_async_api_client, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={"delivery_id": "abc123"})
+    await fake_async_api_client.send_whatsapp(
+        SendWhatsAppRequest(transactional_message_id="1", to="+15551234567", identifiers={"id": "2"})
+    )
+    request = httpx_mock.get_request()
+    assert request.method == "POST"
+    assert request.url.path == "/v1/send/whatsapp"
 
 
 async def test_auth_header_uses_bearer_token(httpx_mock: HTTPXMock):

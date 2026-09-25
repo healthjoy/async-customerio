@@ -8,6 +8,7 @@ from async_customerio.api import (  # noqa
     SendInboxMessageRequest,
     SendPushRequest,
     SendSMSRequest,
+    SendWhatsAppRequest,
 )
 from async_customerio.constants import (  # noqa
     IdentifierCIOObject,
