@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.17.0
+
+- Support of Python 3.15 added.
+
 ## 2.16.0
 
 ### Features
