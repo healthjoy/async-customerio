@@ -110,6 +110,52 @@ async with AsyncCustomerIO(site_id="site", api_key="key", region=Regions.US) as 
     await cio.track(customer_id=5, name="product.purchased", product_sku="XYZ-12345", price=23.45)
 ```
 
+### Manual segments
+
+Add or remove up to 1000 people per call. The segment must be a manual segment that already exists.
+`id_type` is one of `id` (server default), `email` or `cio_id`, and applies to every value in the list.
+
+```python
+async with AsyncCustomerIO(site_id="site", api_key="key") as cio:
+    await cio.add_to_segment(segment_id=7, customer_ids=[5, 6, 7])
+    await cio.remove_from_segment(segment_id=7, customer_ids=["jane@example.com"], id_type="email")
+```
+
+### Forms
+
+Customer.io creates the form connection the first time it sees a new `form_id`. Field values must be
+strings, and the data must include exactly one of `id` or `email` (or a field mapped to one of them).
+
+```python
+async with AsyncCustomerIO(site_id="site", api_key="key") as cio:
+    await cio.submit_form("newsletter-signup", email="jane@example.com", first_name="Jane")
+```
+
+### Metrics and unsubscribes
+
+Report delivery metrics for channels Customer.io doesn't track itself, and handle unsubscribes from
+a custom unsubscribe page. `delivery_id` is the `CIO-Delivery-ID` sent with the message.
+
+```python
+async with AsyncCustomerIO(site_id="site", api_key="key") as cio:
+    await cio.report_metric("RPILAgUBcRhIBqSfeiIwdIYJKxTY", "clicked", href="https://example.com/offer")
+    await cio.unsubscribe("RPILAgUBcRhIBqSfeiIwdIYJKxTY")
+
+    # Push-only legacy endpoint; prefer report_metric
+    await cio.report_push_metric("RPILAgUBcRhIBqSfeiIwdIYJKxTY", device_id="device-token", event="opened")
+```
+
+### Account region
+
+Look up which region your credentials belong to. Works against either regional host, so it is also a
+cheap way to check that the credentials are valid.
+
+```python
+async with AsyncCustomerIO(site_id="site", api_key="key") as cio:
+    region = await cio.get_region()
+    # {"url": "https://track.customer.io", "region": "us", "environment_id": 3}
+```
+
 ## Track API v2
 
 The v2 Track API is accessed via the `.v2` property on the `AsyncCustomerIO` instance. It provides
@@ -446,16 +492,16 @@ else:
 ## API Coverage
 
 <details>
-<summary><strong>Track API</strong> — 14 of 18 endpoints implemented</summary>
+<summary><strong>Track API</strong> — 18 of 18 endpoints implemented</summary>
 
 | Category | Endpoints | Status |
 |---|---|---|
 | Track Customers | 8 | Implemented |
 | Track Events | 4 | Implemented |
 | Track v2 | 2 | Implemented |
-| Track Segments | 2 | Not yet |
-| Region | 1 | Not yet |
-| Forms | 1 | Not yet |
+| Track Segments | 2 | Implemented |
+| Region | 1 | Implemented |
+| Forms | 1 | Implemented |
 
 </details>
 

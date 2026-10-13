@@ -210,6 +210,10 @@ async def test_merge_customers_empty_customer_id(
         ("suppress", {"customer_id": 1}),
         ("unsuppress", {"customer_id": 1}),
         ("merge_customers", {"primary_id_type": CIOID, "primary_id": 1, "secondary_id_type": ID, "secondary_id": 9}),
+        ("add_to_segment", {"segment_id": 1, "customer_ids": [1]}),
+        ("remove_from_segment", {"segment_id": 1, "customer_ids": [1]}),
+        ("get_region", {}),
+        ("submit_form", {"form_id": "signup", "email": "a@b.com"}),
     )
 )
 async def test_unauthorized_request(method, method_arguments, fake_async_customerio, httpx_mock: HTTPXMock):
@@ -412,3 +416,166 @@ async def test_eu_region_uses_eu_host(httpx_mock: HTTPXMock):
     request = httpx_mock.get_request()
     url = str(request.url)
     assert url.startswith("https://track-eu.customer.io/api/v1/customers/")
+
+
+@pytest.mark.parametrize(
+    "method, action", (("add_to_segment", "add_customers"), ("remove_from_segment", "remove_customers"))
+)
+async def test_segment_membership_request(method, action, fake_async_customerio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={})
+    response = await getattr(fake_async_customerio, method)(7, [1, "two"])
+
+    assert response is None
+    request = httpx_mock.get_request()
+    assert request.method == "POST"
+    assert request.url.path == f"/api/v1/segments/7/{action}"
+    assert request.url.query == b""
+    assert json.loads(request.content) == {"ids": ["1", "two"]}
+
+
+@pytest.mark.parametrize("method", ("add_to_segment", "remove_from_segment"))
+async def test_segment_membership_sends_id_type(method, fake_async_customerio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={})
+    await getattr(fake_async_customerio, method)(7, ["a@b.com"], id_type=EMAIL)
+
+    request = httpx_mock.get_request()
+    assert request.url.params["id_type"] == "email"
+
+
+@pytest.mark.parametrize("method", ("add_to_segment", "remove_from_segment"))
+@pytest.mark.parametrize(
+    "segment_id, customer_ids, id_type, error_message", (
+        (0, [1], None, "segment_id cannot be blank"),
+        (7, [], None, "customer_ids cannot be blank"),
+        (7, list(range(1001)), None, "customer_ids cannot exceed 1000"),
+        (7, [1], "phone", "invalid id_type"),
+        (7, [1.5], None, "customer_ids cannot be"),
+    )
+)
+async def test_segment_membership_validation(
+    method, segment_id, customer_ids, id_type, error_message, fake_async_customerio
+):
+    with pytest.raises(AsyncCustomerIOError, match=error_message):
+        await getattr(fake_async_customerio, method)(segment_id, customer_ids, id_type=id_type)
+
+
+async def test_get_region(fake_async_customerio, httpx_mock: HTTPXMock):
+    region = {"url": "https://track-eu.customer.io", "region": "eu", "environment_id": 3}
+    httpx_mock.add_response(status_code=200, json=region)
+
+    response = await fake_async_customerio.get_region()
+
+    assert response == region
+    request = httpx_mock.get_request()
+    assert request.method == "GET"
+    assert request.url.path == "/api/v1/accounts/region"
+    assert "Basic" in request.headers["authorization"]
+
+
+async def test_submit_form(fake_async_customerio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=204)
+
+    response = await fake_async_customerio.submit_form("newsletter signup", email="a@b.com", first_name="Jane")
+
+    assert response is None
+    request = httpx_mock.get_request()
+    assert request.method == "POST"
+    assert request.url.path == "/api/v1/forms/newsletter signup/submit"
+    assert json.loads(request.content) == {"data": {"email": "a@b.com", "first_name": "Jane"}}
+
+
+@pytest.mark.parametrize(
+    "form_id, data, error_message", (
+        ("", {"email": "a@b.com"}, "form_id cannot be blank in submit_form"),
+        ("signup", {}, "data cannot be blank in submit_form"),
+    )
+)
+async def test_submit_form_validation(form_id, data, error_message, fake_async_customerio):
+    with pytest.raises(AsyncCustomerIOError, match=error_message):
+        await fake_async_customerio.submit_form(form_id, **data)
+
+
+async def test_unsubscribe(fake_async_customerio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200, json={})
+
+    response = await fake_async_customerio.unsubscribe("RPILAgUBcRhIBqSfeiIwdIYJKxTY")
+
+    assert response is None
+    request = httpx_mock.get_request()
+    assert request.method == "POST"
+    assert str(request.url) == "https://fake-track.customerio.io/unsubscribe/RPILAgUBcRhIBqSfeiIwdIYJKxTY"
+    assert json.loads(request.content) == {"unsubscribe": True}
+
+
+async def test_unsubscribe_empty_delivery_id(fake_async_customerio):
+    with pytest.raises(AsyncCustomerIOError, match="delivery_id cannot be blank in unsubscribe"):
+        await fake_async_customerio.unsubscribe("")
+
+
+async def test_report_metric(fake_async_customerio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200)
+    occurred_at = datetime(2023, 1, 1, tzinfo=timezone.utc)
+
+    response = await fake_async_customerio.report_metric(
+        "dlv-1", "clicked", href="https://example.com", recipient="a@b.com", timestamp=occurred_at
+    )
+
+    assert response is None
+    request = httpx_mock.get_request()
+    assert request.method == "POST"
+    assert request.url.path == "/api/v1/metrics"
+    assert json.loads(request.content) == {
+        "delivery_id": "dlv-1",
+        "metric": "clicked",
+        "href": "https://example.com",
+        "recipient": "a@b.com",
+        "timestamp": int(occurred_at.timestamp()),
+    }
+
+
+async def test_report_metric_omits_unset_fields(fake_async_customerio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200)
+    await fake_async_customerio.report_metric("dlv-1", "opened")
+
+    request = httpx_mock.get_request()
+    assert json.loads(request.content) == {"delivery_id": "dlv-1", "metric": "opened"}
+
+
+@pytest.mark.parametrize(
+    "delivery_id, metric, error_message", (
+        ("", "opened", "delivery_id cannot be blank in report_metric"),
+        ("dlv-1", "", "metric cannot be blank in report_metric"),
+    )
+)
+async def test_report_metric_validation(delivery_id, metric, error_message, fake_async_customerio):
+    with pytest.raises(AsyncCustomerIOError, match=error_message):
+        await fake_async_customerio.report_metric(delivery_id, metric)
+
+
+async def test_report_push_metric(fake_async_customerio, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(status_code=200)
+
+    response = await fake_async_customerio.report_push_metric("dlv-1", "device-tok", "opened", timestamp=1613063089)
+
+    assert response is None
+    request = httpx_mock.get_request()
+    assert request.method == "POST"
+    assert request.url.path == "/api/v1/push/events"
+    assert json.loads(request.content) == {
+        "delivery_id": "dlv-1",
+        "device_id": "device-tok",
+        "event": "opened",
+        "timestamp": 1613063089,
+    }
+
+
+@pytest.mark.parametrize(
+    "delivery_id, device_id, event, error_message", (
+        ("", "tok", "opened", "delivery_id cannot be blank in report_push_metric"),
+        ("dlv-1", "", "opened", "device_id cannot be blank in report_push_metric"),
+        ("dlv-1", "tok", "", "event cannot be blank in report_push_metric"),
+    )
+)
+async def test_report_push_metric_validation(delivery_id, device_id, event, error_message, fake_async_customerio):
+    with pytest.raises(AsyncCustomerIOError, match=error_message):
+        await fake_async_customerio.report_push_metric(delivery_id, device_id, event)

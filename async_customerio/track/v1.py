@@ -19,7 +19,7 @@ from async_customerio.errors import AsyncCustomerIOError
 from async_customerio.regions import Region, Regions
 from async_customerio.retry import RetryStrategy
 from async_customerio.track.v2 import Actions, EntityPayload, TrackAPIV2  # noqa: F401 - re-export for backwards compat
-from async_customerio.utils import datetime_to_timestamp, join_url, sanitize
+from async_customerio.utils import datetime_to_timestamp, join_url, sanitize, stringify_list
 
 
 class AsyncCustomerIO(AsyncClientBase):
@@ -50,6 +50,16 @@ class AsyncCustomerIO(AsyncClientBase):
     CUSTOMER_UNSUPRESS_ENDPOINT = "{customer_endpoint}/unsuppress".format(customer_endpoint=CUSTOMER_ENDPOINT)
     EVENTS_ENDPOINT = "/events"
     MERGE_CUSTOMERS_ENDPOINT = "/merge_customers"
+    SEGMENT_ADD_CUSTOMERS_ENDPOINT = "/segments/{segment_id}/add_customers"
+    SEGMENT_REMOVE_CUSTOMERS_ENDPOINT = "/segments/{segment_id}/remove_customers"
+    REGION_ENDPOINT = "/accounts/region"
+    FORM_SUBMIT_ENDPOINT = "/forms/{form_id}/submit"
+    METRICS_ENDPOINT = "/metrics"
+    PUSH_METRICS_ENDPOINT = "/push/events"
+    # Served from the host root, outside of the ``/api/v1`` prefix.
+    UNSUBSCRIBE_ENDPOINT = "/unsubscribe/{delivery_id}"
+
+    MAX_SEGMENT_CUSTOMER_IDS = 1000
 
     def __init__(
         self,
@@ -330,6 +340,198 @@ class AsyncCustomerIO(AsyncClientBase):
             "POST",
             join_url(base_url, self.MERGE_CUSTOMERS_ENDPOINT),
             json_payload=post_data,
+        )
+
+    async def unsubscribe(self, delivery_id: str) -> None:
+        """
+        Custom unsubscribe handling.
+
+        Set a person's ``unsubscribed`` attribute to ``true`` and attribute the unsubscribe to the given delivery.
+        Use it to back a custom unsubscribe page. It does not update custom subscription-center attributes; use
+        :meth:`identify` for those.
+        :param delivery_id: the delivery the person unsubscribed from.
+        """
+        if not delivery_id:
+            raise AsyncCustomerIOError("delivery_id cannot be blank in unsubscribe")
+
+        base_url = self.setup_base_url(host=self.host, port=self.port, prefix="")
+        await self.send_request(
+            "POST",
+            join_url(base_url, self.UNSUBSCRIBE_ENDPOINT.format(delivery_id=delivery_id)),
+            json_payload={"unsubscribe": True},
+        )
+
+    async def report_metric(
+        self,
+        delivery_id: str,
+        metric: str,
+        *,
+        href: Optional[str] = None,
+        reason: Optional[str] = None,
+        recipient: Optional[str] = None,
+        timestamp: t.Optional[t.Union[datetime, int]] = None,
+    ) -> None:
+        """
+        Report a delivery metric for any channel (email, push, SMS, in-app, Slack, webhook).
+
+        Use it for channels that aren't native to Customer.io or don't rely on its SDKs.
+        :param delivery_id: the ``CIO-Delivery-ID`` of the message the metric belongs to.
+        :param metric: the metric to report, e.g. ``delivered``, ``opened``, ``clicked``, ``converted``, ``bounced``.
+            Accepted values depend on the channel.
+        :param href: for ``clicked`` metrics, the link the recipient clicked.
+        :param reason: for failure metrics (like ``bounced``), the reason for the failure.
+        :param recipient: the email, ID or device ID of the recipient, depending on the channel.
+        :param timestamp: when the metric occurred; datetimes are converted to unix timestamps.
+        """
+        if not delivery_id:
+            raise AsyncCustomerIOError("delivery_id cannot be blank in report_metric")
+
+        if not metric:
+            raise AsyncCustomerIOError("metric cannot be blank in report_metric")
+
+        optional_fields = {"href": href, "reason": reason, "recipient": recipient, "timestamp": timestamp}
+        post_data: t.Dict[str, t.Any] = {"delivery_id": delivery_id, "metric": metric}
+        post_data.update({key: value for key, value in optional_fields.items() if value is not None})
+        base_url = self.setup_base_url(host=self.host, port=self.port, prefix=self.API_PREFIX)
+        await self.send_request("POST", join_url(base_url, self.METRICS_ENDPOINT), json_payload=post_data)
+
+    async def report_push_metric(
+        self,
+        delivery_id: str,
+        device_id: str,
+        event: str,
+        *,
+        timestamp: t.Optional[t.Union[datetime, int]] = None,
+    ) -> None:
+        """
+        Report a device-side push metric.
+
+        Customer.io keeps this endpoint working but recommends :meth:`report_metric`, which covers every channel.
+        :param delivery_id: the ``CIO-Delivery-ID`` from the push notification.
+        :param device_id: the ``CIO-Delivery-Token`` of the device that received the notification.
+        :param event: the push metric, one of ``opened``, ``converted`` or ``delivered``.
+        :param timestamp: when the event occurred; datetimes are converted to unix timestamps.
+        """
+        if not delivery_id:
+            raise AsyncCustomerIOError("delivery_id cannot be blank in report_push_metric")
+
+        if not device_id:
+            raise AsyncCustomerIOError("device_id cannot be blank in report_push_metric")
+
+        if not event:
+            raise AsyncCustomerIOError("event cannot be blank in report_push_metric")
+
+        post_data: t.Dict[str, t.Any] = {"delivery_id": delivery_id, "device_id": device_id, "event": event}
+        if timestamp is not None:
+            post_data["timestamp"] = timestamp
+
+        base_url = self.setup_base_url(host=self.host, port=self.port, prefix=self.API_PREFIX)
+        await self.send_request("POST", join_url(base_url, self.PUSH_METRICS_ENDPOINT), json_payload=post_data)
+
+    async def add_to_segment(
+        self,
+        segment_id: int,
+        customer_ids: t.List[t.Union[str, int]],
+        id_type: Optional[str] = None,
+    ) -> None:
+        """
+        Add people to a manual segment.
+
+        The segment must already exist; data-driven segments cannot be modified through the API.
+        :param segment_id: the ID of the manual segment.
+        :param customer_ids: up to 1000 identifiers of people to add. All of them must be of ``id_type``;
+            Customer.io ignores values that don't match it.
+        :param id_type: the type of ``customer_ids`` — ``id``, ``email`` or ``cio_id``. Defaults to ``id``
+            on the server side.
+        """
+        await self._update_segment_membership(
+            self.SEGMENT_ADD_CUSTOMERS_ENDPOINT, segment_id, customer_ids, id_type, "add_to_segment"
+        )
+
+    async def remove_from_segment(
+        self,
+        segment_id: int,
+        customer_ids: t.List[t.Union[str, int]],
+        id_type: Optional[str] = None,
+    ) -> None:
+        """
+        Remove people from a manual segment.
+
+        Data-driven segments cannot be modified through the API.
+        :param segment_id: the ID of the manual segment.
+        :param customer_ids: up to 1000 identifiers of people to remove. All of them must be of ``id_type``.
+        :param id_type: the type of ``customer_ids`` — ``id``, ``email`` or ``cio_id``. Defaults to ``id``
+            on the server side.
+        """
+        await self._update_segment_membership(
+            self.SEGMENT_REMOVE_CUSTOMERS_ENDPOINT, segment_id, customer_ids, id_type, "remove_from_segment"
+        )
+
+    async def _update_segment_membership(
+        self,
+        endpoint: str,
+        segment_id: int,
+        customer_ids: t.List[t.Union[str, int]],
+        id_type: Optional[str],
+        method_name: str,
+    ) -> None:
+        if not segment_id:
+            raise AsyncCustomerIOError("segment_id cannot be blank in {0}".format(method_name))
+
+        if not customer_ids:
+            raise AsyncCustomerIOError("customer_ids cannot be blank in {0}".format(method_name))
+
+        if len(customer_ids) > self.MAX_SEGMENT_CUSTOMER_IDS:
+            raise AsyncCustomerIOError(
+                "customer_ids cannot exceed {0} items in {1}".format(self.MAX_SEGMENT_CUSTOMER_IDS, method_name)
+            )
+
+        if id_type is not None and not self._is_valid_id_type(id_type):
+            raise AsyncCustomerIOError("invalid id_type in {0}".format(method_name))
+
+        base_url = self.setup_base_url(host=self.host, port=self.port, prefix=self.API_PREFIX)
+        await self.send_request(
+            "POST",
+            join_url(
+                base_url,
+                endpoint.format(segment_id=segment_id),
+                params={"id_type": id_type} if id_type is not None else None,
+            ),
+            json_payload={"ids": stringify_list(customer_ids)},
+        )
+
+    async def get_region(self) -> dict:
+        """
+        Find the region of the account that the configured credentials belong to.
+
+        Works against either regional Track host. Also useful as a cheap credentials check.
+        :return: dict with ``url`` (the Track API URL to use), ``region`` (``us`` or ``eu``) and ``environment_id``
+            (the workspace the credentials are valid for).
+        """
+        base_url = self.setup_base_url(host=self.host, port=self.port, prefix=self.API_PREFIX)
+        return t.cast(dict, await self.send_request("GET", join_url(base_url, self.REGION_ENDPOINT)))
+
+    async def submit_form(self, form_id: str, **data) -> None:
+        """
+        Submit a form response.
+
+        If Customer.io does not recognize ``form_id``, it creates a new form connection. If the respondent does not
+        exist yet, they are created.
+        :param form_id: an identifier of your choosing; submissions with the same ID belong to the same form.
+        :param data: form fields and their values, which Customer.io requires to be strings. Must include exactly
+            one of ``id`` or ``email`` (or a field mapped to one of them) to identify the respondent.
+        """
+        if not form_id:
+            raise AsyncCustomerIOError("form_id cannot be blank in submit_form")
+
+        if not data:
+            raise AsyncCustomerIOError("data cannot be blank in submit_form")
+
+        base_url = self.setup_base_url(host=self.host, port=self.port, prefix=self.API_PREFIX)
+        await self.send_request(
+            "POST",
+            join_url(base_url, self.FORM_SUBMIT_ENDPOINT.format(form_id=form_id)),
+            json_payload={"data": data},
         )
 
     @property
