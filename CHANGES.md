@@ -1,5 +1,27 @@
 # Changelog
 
+## 2.18.0
+
+### Features
+
+- **Feature**: Complete Track API coverage. ``AsyncCustomerIO`` gains seven methods:
+
+  - ``add_to_segment()`` / ``remove_from_segment()`` for manual segment membership
+    (``POST /api/v1/segments/{segment_id}/add_customers`` and ``/remove_customers``). Both take up
+    to 1000 ids and an optional ``id_type`` (``id``, ``email`` or ``cio_id``).
+  - ``get_region()`` (``GET /api/v1/accounts/region``) returns the account's region, Track URL and
+    ``environment_id``.
+  - ``submit_form()`` (``POST /api/v1/forms/{form_id}/submit``) submits a form response.
+  - ``unsubscribe()`` (``POST /unsubscribe/{delivery_id}``) for custom unsubscribe pages.
+  - ``report_metric()`` (``POST /api/v1/metrics``) reports delivery metrics for any channel.
+  - ``report_push_metric()`` (``POST /api/v1/push/events``) supports the legacy push-only metrics endpoint.
+
+### Documentation
+
+- The README API coverage table previously listed Track Customers and Track Events as fully
+  implemented, although ``unsubscribe``, ``metrics`` and ``push/events`` were missing. They are now
+  implemented, and the Track API is covered 18 of 18.
+
 ## 2.17.0
 
 - Support of Python 3.15 added.
